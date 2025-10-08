@@ -95,9 +95,21 @@ const Portfolio = () => {
         </h2>
         <div className="max-w-4xl mx-auto">
           <TimelineExperience
+            company="Confluent"
+            role="Senior Software Engineer II"
+            period="May 2025 - Present"
+            location="Remote - Bengaluru, India"
+            achievements={[
+              "Contributing to the infrastructure and developer experience behind https://docs.confluent.io/",
+              "My work involves improving the build pipeline, enhancing extensibility of Sphinx-based systems, and driving modernization efforts using JavaScript for a more scalable and maintainable documentation platform",
+              "Implemented Lambda and CloudFront for enhanced content delivery",
+              "Collaborating closely with cross-functional teams to shape the next generation of Confluent documentation experience.",
+            ]}
+          />
+          <TimelineExperience
             company="Hinge Health"
             role="Senior Frontend Engineer"
-            period="April 2024 - Present"
+            period="April 2024 - April 2025"
             location="Bengaluru, India"
             achievements={[
               "Led AWS migration improving scalability and reducing load times by 40%",
