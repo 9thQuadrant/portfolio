@@ -62,10 +62,10 @@ const Portfolio = () => {
             Phaneendra Charyulu Kanduri
           </h1>
           <p className="text-2xl text-gray-300 mb-8">
-            Senior Frontend Engineer
+            Senior Software Engineer II - Frontend
           </p>
           <p className="text-xl text-gray-400 max-w-2xl mx-auto mb-8">
-            7+ years of experience in crafting high-performance user interfaces
+            8+ years of experience in crafting high-performance user interfaces
             specializing in React, Angular, and Progressive Web Apps
           </p>
           <div className="flex justify-center gap-6">
