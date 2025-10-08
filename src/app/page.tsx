@@ -225,7 +225,7 @@ const Portfolio = () => {
       </section>
 
       <footer className="py-8 px-4 text-center text-gray-400">
-        <p>© 2024 Phaneendra Charyulu. All rights reserved.</p>
+        <p>Best Regards, Phaneendra Charyulu Kanduri.</p>
       </footer>
     </div>
   );
