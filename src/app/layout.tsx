@@ -4,6 +4,16 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "Phaneendra Kanduri Portfolio",
   description: "Creation of Phaneendra",
+  openGraph: {
+    images: [
+      {
+        url: "https://avatars.githubusercontent.com/u/14833423?v=4&size=40",
+        width: 1200,
+        height: 630,
+        alt: "Phaneendra Swag Favicon",
+      },
+    ],
+  }
 };
 
 export default function RootLayout({
