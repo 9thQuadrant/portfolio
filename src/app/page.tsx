@@ -7,9 +7,16 @@ import { TimelineExperience } from "@/app/shared/timeline";
 import { SocialLink } from "@/app/shared/socialLink";
 import { Projects } from "@/app/shared/projects";
 import { SkillCard } from "@/app/shared/skillCard";
+import { NameDecompose } from "@/app/shared/nameDecompose";
+import { BackgroundStars } from "@/app/shared/backgroundStars";
 
 const Portfolio = () => {
   const { scrollY, mousePosition } = useScrollAndMousePosition();
+
+  // Calculate scroll progress for name animation (0 to 1)
+  // Animation happens over 60% of hero section to make it faster (about 150vh)
+  const heroHeight = typeof window !== 'undefined' ? window.innerHeight * 2.5 : 2500;
+  const nameScrollProgress = Math.min(scrollY / (heroHeight * 0.6), 1);
 
   // Projects data
   const projects = [
@@ -47,20 +54,56 @@ const Portfolio = () => {
     }
   ];
 
+  // Calculate if we're near the bottom of the page
+  const isNearBottom = typeof window !== 'undefined' 
+    ? scrollY + window.innerHeight >= document.documentElement.scrollHeight - 300
+    : false;
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-900 to-black text-white relative">
+      {/* Background stars animation - throughout entire page */}
+      <BackgroundStars scrollY={scrollY} />
+      
+      {/* Moon at bottom right - slides up with bounce */}
+      <div 
+        className="fixed z-0"
+        style={{
+          right: '120px',
+          bottom: isNearBottom ? '120px' : '-200px', // Slide up from below
+          transition: 'bottom 1.2s cubic-bezier(0.34, 1.56, 0.64, 1)', // Smoother bounce easing
+        }}
+      >
+        {/* Moon glow */}
+        <div className="absolute inset-0 rounded-full bg-yellow-100 blur-3xl opacity-30" 
+          style={{ width: '180px', height: '180px', left: '-15px', top: '-15px' }} 
+        />
+        {/* Moon body */}
+        <div className="relative w-32 h-32 rounded-full bg-gradient-to-br from-yellow-50 to-yellow-200 shadow-2xl">
+          {/* Moon craters */}
+          <div className="absolute top-6 right-8 w-4 h-4 rounded-full bg-yellow-300 opacity-40" />
+          <div className="absolute top-12 right-5 w-3 h-3 rounded-full bg-yellow-300 opacity-30" />
+          <div className="absolute bottom-8 right-10 w-5 h-5 rounded-full bg-yellow-300 opacity-35" />
+          <div className="absolute top-8 left-6 w-6 h-6 rounded-full bg-yellow-300 opacity-25" />
+          <div className="absolute bottom-10 left-8 w-3 h-3 rounded-full bg-yellow-300 opacity-30" />
+        </div>
+      </div>
+      
       {/* Hero Section */}
-      <section className="relative h-screen flex items-center justify-center overflow-hidden">
-        <div
-          className="text-center transform transition-all duration-1000 hover:scale-105"
+      <section className="relative min-h-[250vh] flex items-center justify-center overflow-hidden" style={{ alignItems: 'center' }}>
+        
+        <div 
+          className="text-center fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full px-4 z-10"
           style={{
-            transform: `translateY(${scrollY * 0.5}px)`,
-            opacity: 1 - scrollY / 500,
+            // Keep full opacity until 80% scroll, then fade out
+            opacity: scrollY < heroHeight * 0.8 
+              ? 1 
+              : Math.max(0, 1 - ((scrollY - heroHeight * 0.8) / (heroHeight * 0.2))),
+            transition: 'opacity 0.5s cubic-bezier(0.4, 0.0, 0.2, 1)',
           }}
         >
-          <h1 className="text-7xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-purple-600 hover:from-purple-600 hover:to-blue-800 transition-all duration-500">
-            Phaneendra Charyulu Kanduri
-          </h1>
+          <div className="mb-8">
+            <NameDecompose scrollProgress={nameScrollProgress} />
+          </div>
           <p className="text-2xl text-gray-300 mb-8">
             Senior Software Engineer II - Frontend
           </p>
@@ -83,13 +126,19 @@ const Portfolio = () => {
             />
           </div>
         </div>
-        <div className="absolute bottom-10 animate-bounce">
+        <div 
+          className="fixed bottom-10 left-1/2 -translate-x-1/2 animate-bounce z-10"
+          style={{
+            opacity: Math.max(0, 1 - scrollY / 600),
+            transition: 'opacity 0.2s ease-out',
+          }}
+        >
           <ArrowDown size={24} />
         </div>
       </section>
 
       {/* Experience Timeline Section */}
-      <section className="py-20 px-4">
+      <section className="py-32 px-4 mt-20">
         <h2 className="text-4xl font-bold text-center mb-16 bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-600">
           Professional Journey
         </h2>
