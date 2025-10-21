@@ -75,7 +75,7 @@ export const NameDecompose = ({ scrollProgress }: NameDecomposeProps) => {
   return (
     <div className="relative w-full min-h-[8rem] flex items-center justify-center overflow-visible">
       {/* Master flex container */}
-      <div className="flex font-bold text-6xl" style={{ alignItems: 'center' }}>
+      <div className="flex font-bold text-6xl flex-wrap" style={{ alignItems: 'center' }}>
         {fullName.split('').map((char, index) => {
           const animation = getAnimation(index, char);
           const isPrimary = index === pIndex || index === kIndex;
