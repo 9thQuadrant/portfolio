@@ -73,5 +73,5 @@ export interface Experience {
     { label: "GitHub", sub: "9thQuadrant", href: "https://github.com/9thQuadrant" },
     { label: "LinkedIn", sub: "phaneendracharyulu", href: "https://www.linkedin.com/in/phaneendracharyulu" },
     { label: "StackOverflow", sub: "400+ reputation", href: "https://stackoverflow.com/users/3985774/phaneendra-charyulu-kanduri" },
-    { label: "Dev.to Blog", sub: "Coming soon", href: "#" },
+    { label: "Dev.to Blog", sub: "9thquadrant", href: "https://dev.to/9thquadrant" },
   ];
