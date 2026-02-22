@@ -1,0 +1,46 @@
+---
+const stars = Array.from({ length: 70 }, (_, i) => {
+  const seed = i * 137.508; // golden angle
+  return {
+    id: i,
+    x: (seed * 3.14159) % 100,
+    y: (seed * 2.71828) % 100,
+    size: 1 + ((seed * 1.41421) % 2),
+    opacity: 0.15 + ((seed * 0.0113) % 0.35),
+    duration: 3 + ((seed * 0.0071) % 4),
+    delay: (seed * 0.013) % 5,
+  };
+});
+---
+
+<div class="stars-container" aria-hidden="true">
+  {stars.map((s) => (
+    <div
+      class="star"
+      style={`
+        left: ${s.x}%;
+        top: ${s.y}%;
+        width: ${s.size}px;
+        height: ${s.size}px;
+        opacity: ${s.opacity};
+        animation: twinkle ${s.duration}s ${s.delay}s ease-in-out infinite;
+      `}
+    />
+  ))}
+</div>
+
+<style>
+  .stars-container {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    overflow: hidden;
+  }
+
+  .star {
+    position: absolute;
+    border-radius: 50%;
+    background: white;
+  }
+</style>
