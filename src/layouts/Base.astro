@@ -6,7 +6,7 @@ interface Props {
 
 const {
   title = "Phaneendra Kanduri – Senior Frontend Engineer",
-  description = "Senior Frontend Engineer with 8+ years. Specialist in performance engineering, legacy modernization, and accessibility compliance.",
+  description = "Senior Frontend Engineer with 9+ years. Specialist in performance engineering, legacy modernization, and accessibility compliance.",
 } = Astro.props;
 ---
 
@@ -30,7 +30,28 @@ const {
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());
-  gtag('config', 'G-PR1ZE2VWBN');
+
+  // Strip cold-email lead params (fn/co/e) before anything reaches GA4.
+  // Only utm_source/utm_medium/utm_campaign are allowed through, on both
+  // page_path and page_location (gtag auto-collects page_location from the
+  // raw URL otherwise, which would leak the same PII).
+  (function () {
+    var allowed = ['utm_source', 'utm_medium', 'utm_campaign'];
+    var src = new URLSearchParams(window.location.search);
+    var clean = new URLSearchParams();
+    allowed.forEach(function (key) {
+      var val = src.get(key);
+      if (val) clean.set(key, val);
+    });
+    var qs = clean.toString();
+    var page_path = window.location.pathname + (qs ? '?' + qs : '');
+    var page_location = window.location.origin + page_path;
+
+    gtag('config', 'G-PR1ZE2VWBN', {
+      page_path: page_path,
+      page_location: page_location,
+    });
+  })();
     (function(c,l,a,r,i,t,y){
         c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
         t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;

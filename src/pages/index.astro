@@ -9,33 +9,146 @@ import { experiences, skills, links } from '../data/content';
 
   <!-- Hero -->
   <section class="relative z-10 min-h-screen flex flex-col items-center justify-center px-6 text-center">
-    <p class="mono text-xs uppercase tracking-[0.3em] text-blue-400 mb-6 animate-fade-up-delay-1">
+    <p id="hero-eyebrow" class="mono text-xs uppercase tracking-[0.3em] text-blue-400 mb-6 animate-fade-up-delay-1">
       Senior Frontend Engineer
     </p>
 
-    <h1 class="text-6xl md:text-8xl font-black leading-none tracking-tight mb-2 animate-fade-up-delay-2">
-      <span class="bg-gradient-to-r from-white via-slate-200 to-slate-300 bg-clip-text text-transparent">
-        Phaneendra
-      </span>
-    </h1>
-    <h1 class="text-6xl md:text-8xl font-black leading-none tracking-tight mb-10 animate-fade-up-delay-2">
-      <span class="bg-gradient-to-br from-blue-400 via-violet-400 to-violet-600 bg-clip-text text-transparent">
-        Kanduri
-      </span>
-    </h1>
+    <div id="hero-headline">
+      <h1 class="text-6xl md:text-8xl font-black leading-none tracking-tight mb-2 animate-fade-up-delay-2">
+        <span class="bg-gradient-to-r from-white via-slate-200 to-slate-300 bg-clip-text text-transparent">
+          Phaneendra
+        </span>
+      </h1>
+      <h1 class="text-6xl md:text-8xl font-black leading-none tracking-tight mb-10 animate-fade-up-delay-2">
+        <span class="bg-gradient-to-br from-blue-400 via-violet-400 to-violet-600 bg-clip-text text-transparent">
+          Kanduri
+        </span>
+      </h1>
+    </div>
+
+    <script is:inline>
+      // Cold-email personalization + Calendly prompt, driven entirely by
+      // ?utm_medium=email&fn=&co=&e= on incoming Apollo links.
+      // Self-contained on purpose (Task spec: single script, easy to remove).
+      (function () {
+        var params = new URLSearchParams(window.location.search);
+        var utmMedium = params.get('utm_medium');
+        var fn = (params.get('fn') || '').trim();
+        var co = (params.get('co') || '').trim();
+        var email = (params.get('e') || '').trim();
+
+        var calendlyLoading = false;
+        function openCalendlyPopup() {
+          if (window.Calendly) {
+            window.Calendly.initPopupWidget({
+              url: 'https://calendly.com/phaneendra-9thquadrant/30min?utm_source=coldemail',
+              prefill: { email: email, name: fn || '' },
+            });
+            return;
+          }
+          if (calendlyLoading) return;
+          calendlyLoading = true;
+
+          var css = document.createElement('link');
+          css.rel = 'stylesheet';
+          css.href = 'https://assets.calendly.com/assets/external/widget.css';
+          document.head.appendChild(css);
+
+          var script = document.createElement('script');
+          script.src = 'https://assets.calendly.com/assets/external/widget.js';
+          script.async = true;
+          script.onload = function () {
+            if (window.Calendly) {
+              window.Calendly.initPopupWidget({
+                url: 'https://calendly.com/phaneendra-9thquadrant/30min?utm_source=coldemail',
+                prefill: { email: email, name: fn || '' },
+              });
+            }
+          };
+          document.head.appendChild(script);
+        }
+
+        // --- persistent manual CTA: works for any visitor, any time,
+        // independent of the once-per-session auto-popup below.
+        // Delegated on document since #book-call-btn is parsed after this
+        // script runs — a direct getElementById here would find nothing.
+        document.addEventListener('click', function (e) {
+          if (e.target.closest && e.target.closest('#book-call-btn')) {
+            openCalendlyPopup();
+          }
+        });
+
+        if (utmMedium !== 'email') return;
+
+        // --- eyebrow label: swap "Senior Frontend Engineer" for the company ---
+        if (co) {
+          var eyebrow = document.getElementById('hero-eyebrow');
+          if (eyebrow) eyebrow.textContent = co;
+        }
+
+        // --- Task 2: personalize the hero headline ---
+        var text = null;
+        if (fn) {
+          text = 'Hi ' + fn + '. Got 15 minutes?';
+        }
+
+        if (text) {
+          var headline = document.getElementById('hero-headline');
+          if (headline) {
+            headline.innerHTML = '';
+            var h1 = document.createElement('h1');
+            h1.className =
+              'text-4xl md:text-6xl font-black leading-tight tracking-tight mb-10 animate-fade-up-delay-2';
+            var span = document.createElement('span');
+            span.className =
+              'bg-gradient-to-r from-white via-slate-200 to-slate-300 bg-clip-text text-transparent';
+            span.textContent = text;
+            h1.appendChild(span);
+            headline.appendChild(h1);
+
+            // The headline no longer says who this site belongs to once it
+            // greets the visitor by name — reintroduce it as a small line,
+            // with my name weighted so it doesn't disappear into the rest.
+            var intro = document.createElement('p');
+            intro.className = 'text-sm text-slate-400 mb-4 animate-fade-up-delay-3';
+            intro.innerHTML =
+              "I'm <span class=\"font-semibold text-slate-200\">Phaneendra Kanduri</span>, frontend engineer at Confluent (an IBM company).";
+            headline.insertAdjacentElement('afterend', intro);
+          }
+        }
+
+        // --- Task 4: gated, delayed, prefilled Calendly popup ---
+        if (!email) return;
+        if (sessionStorage.getItem('coldEmailCalendlyShown')) return;
+
+        setTimeout(function () {
+          if (sessionStorage.getItem('coldEmailCalendlyShown')) return;
+          sessionStorage.setItem('coldEmailCalendlyShown', '1');
+          openCalendlyPopup();
+        }, 1200);
+      })();
+    </script>
 
     <p class="text-base md:text-lg text-slate-400 max-w-lg mx-auto mb-4 leading-relaxed animate-fade-up-delay-3">
-      8+ years building high-performance frontends. Specialist in performance
-      engineering, legacy modernization, and accessibility compliance.
+      9+ years turning slow, legacy frontends into fast, accessible products
+      for regulated industries and Fortune 500 teams.
     </p>
 
-    <p class="mono text-xs text-slate-500 mb-10 animate-fade-up-delay-3">
+    <p class="mono text-xs text-slate-200 mb-10 animate-fade-up-delay-3">
       2s → 0.2s FCP &nbsp;·&nbsp; 20min → 1.5min builds &nbsp;·&nbsp; 30s → 5s load
     </p>
 
- <p class="mono text-xs text-slate-500 mb-10 animate-fade-up-delay-3">
+ <p class="mono text-xs text-slate-200 mb-10 animate-fade-up-delay-3">
       Enterprise SaaS &nbsp;·&nbsp; Healthcare &nbsp;·&nbsp; HR Tech
     </p>
+
+    <button
+      id="book-call-btn"
+      type="button"
+      class="mono text-xs uppercase tracking-widest px-6 py-3 mb-8 rounded-full border border-blue-500/50 text-blue-300 hover:bg-blue-500/10 hover:border-blue-400 hover:text-blue-200 transition-colors animate-fade-up-delay-4"
+    >
+      Book a call
+    </button>
 
     <div class="flex justify-center gap-4 animate-fade-up-delay-4">
       <a href="https://github.com/9thQuadrant" target="_blank" rel="noopener noreferrer" aria-label="GitHub"
@@ -59,6 +172,13 @@ import { experiences, skills, links } from '../data/content';
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
           <polyline points="22,6 12,13 2,6"/>
+        </svg>
+      </a>
+      <a href="https://dev.to/9thquadrant" target="_blank" rel="noopener noreferrer" aria-label="Dev.to"
+        class="icon-link">
+        <!-- Dev.to icon -->
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M7.42 10.05c-.18-.16-.46-.23-.84-.23H6l.02 2.44.04 2.45.56-.02c.41 0 .63-.07.83-.26.24-.24.26-.36.26-2.2 0-1.91-.02-1.96-.29-2.18zM0 4.94v14.12h24V4.94H0zM8.56 15.3c-.44.58-1.06.77-2.53.77H4.71V8.53h1.4c1.67 0 2.16.18 2.6.9.27.43.29.6.32 2.57.03 2.23-.02 2.73-.47 3.3zm5.09-5.47h-2.47v1.77h1.52v1.28l-.72.04-.75.03v1.77l1.22.03 1.2.04v1.28h-1.6c-1.53 0-1.6-.01-1.87-.3l-.28-.29v-3.16c0-3.02.01-3.18.25-3.48.23-.31.25-.31 1.88-.31h1.62v1.3zm4.68 5.45c-.17.43-.64.79-1.02.79-.18 0-.45-.15-.67-.39-.32-.32-.45-.63-.82-2.08l-.9-3.39-.45-1.67h.76c.4 0 .75.02.75.05 0 .06 1.16 4.54 1.26 4.83.04.15.32-.7.73-2.3l.66-2.52.74-.04c.4-.02.73 0 .73.04 0 .14-1.65 6.32-1.77 6.62z"/>
         </svg>
       </a>
     </div>
@@ -148,9 +268,9 @@ import { experiences, skills, links } from '../data/content';
 
   <!-- Footer -->
   <footer class="relative z-10 py-10 px-6 text-center border-t border-slate-900">
-    <a href="mailto:phaneendra9q@gmail.com"
+    <a href="mailto:phaneendra@9thquadrant.com"
       class="mono text-xs text-slate-600 hover:text-blue-400 transition-colors">
-      phaneendra9q@gmail.com
+      phaneendra@9thquadrant.com
     </a>
   </footer>
 </Base>
