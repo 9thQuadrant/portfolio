@@ -27,7 +27,7 @@ import { experiences, skills, links } from '../data/content';
     </div>
 
     <script is:inline>
-      // Cold-email personalization + Calendly prompt, driven entirely by
+      // Cold-email personalization + Cal.com prompt, driven entirely by
       // ?utm_medium=email&fn=&co=&e= on incoming Apollo links.
       // Self-contained on purpose (Task spec: single script, easy to remove).
       (function () {
@@ -37,35 +37,53 @@ import { experiences, skills, links } from '../data/content';
         var co = (params.get('co') || '').trim();
         var email = (params.get('e') || '').trim();
 
-        var calendlyLoading = false;
-        function openCalendlyPopup() {
-          if (window.Calendly) {
-            window.Calendly.initPopupWidget({
-              url: 'https://calendly.com/phaneendra-9thquadrant/30min?utm_source=coldemail',
-              prefill: { email: email, name: fn || '' },
-            });
-            return;
-          }
-          if (calendlyLoading) return;
-          calendlyLoading = true;
+        var CAL_LINK = 'phaneendra-kanduri/30min';
+        var calInitialized = false;
 
-          var css = document.createElement('link');
-          css.rel = 'stylesheet';
-          css.href = 'https://assets.calendly.com/assets/external/widget.css';
-          document.head.appendChild(css);
+        // Official Cal.com embed loader (https://cal.com/docs/embed).
+        // Idempotent: safe to call more than once, only injects embed.js once.
+        function ensureCalLoaded() {
+          if (calInitialized) return;
+          calInitialized = true;
+          (function (C, A, L) {
+            let p = function (a, ar) { a.q.push(ar); };
+            let d = C.document;
+            C.Cal = C.Cal || function () {
+              let cal = C.Cal;
+              let ar = arguments;
+              if (!cal.loaded) {
+                cal.ns = {};
+                cal.q = cal.q || [];
+                d.head.appendChild(d.createElement('script')).src = A;
+                cal.loaded = true;
+              }
+              if (ar[0] === L) {
+                const api = function () { p(api, arguments); };
+                const namespace = ar[1];
+                api.q = api.q || [];
+                if (typeof namespace === 'string') {
+                  cal.ns[namespace] = cal.ns[namespace] || api;
+                  p(cal.ns[namespace], ar);
+                  p(cal, ['initNamespace', namespace]);
+                } else p(cal, ar);
+                return;
+              }
+              p(cal, ar);
+            };
+          })(window, 'https://app.cal.com/embed/embed.js', 'init');
+          window.Cal('init', { origin: 'https://cal.com' });
+        }
 
-          var script = document.createElement('script');
-          script.src = 'https://assets.calendly.com/assets/external/widget.js';
-          script.async = true;
-          script.onload = function () {
-            if (window.Calendly) {
-              window.Calendly.initPopupWidget({
-                url: 'https://calendly.com/phaneendra-9thquadrant/30min?utm_source=coldemail',
-                prefill: { email: email, name: fn || '' },
-              });
-            }
-          };
-          document.head.appendChild(script);
+        function openCalPopup() {
+          ensureCalLoaded();
+          window.Cal('modal', {
+            calLink: CAL_LINK,
+            config: {
+              name: fn || undefined,
+              email: email || undefined,
+              theme: 'dark',
+            },
+          });
         }
 
         // --- persistent manual CTA: works for any visitor, any time,
@@ -74,7 +92,7 @@ import { experiences, skills, links } from '../data/content';
         // script runs — a direct getElementById here would find nothing.
         document.addEventListener('click', function (e) {
           if (e.target.closest && e.target.closest('#book-call-btn')) {
-            openCalendlyPopup();
+            openCalPopup();
           }
         });
 
@@ -117,14 +135,14 @@ import { experiences, skills, links } from '../data/content';
           }
         }
 
-        // --- Task 4: gated, delayed, prefilled Calendly popup ---
+        // --- Task 4: gated, delayed, prefilled Cal.com popup ---
         if (!email) return;
-        if (sessionStorage.getItem('coldEmailCalendlyShown')) return;
+        if (sessionStorage.getItem('coldEmailCalPopupShown')) return;
 
         setTimeout(function () {
-          if (sessionStorage.getItem('coldEmailCalendlyShown')) return;
-          sessionStorage.setItem('coldEmailCalendlyShown', '1');
-          openCalendlyPopup();
+          if (sessionStorage.getItem('coldEmailCalPopupShown')) return;
+          sessionStorage.setItem('coldEmailCalPopupShown', '1');
+          openCalPopup();
         }, 1200);
       })();
     </script>
