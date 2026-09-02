@@ -7,6 +7,52 @@ import { experiences, skills, links } from '../data/content';
 <Base>
   <Stars />
 
+  <!-- Ambient glow: sits at the top of the page, descends into view on
+       load, and reacts to mouse movement like a water surface being
+       disturbed. Split into a wrapper (one-time entrance animation) and an
+       inner blob (continuous mouse-reactive transform) since a single
+       element can only run one `transform` at a time. Self-contained and
+       independent of the cold-email script, so it's easy to tweak or
+       remove without touching anything else. -->
+  <div id="mouse-glow-wrap" aria-hidden="true">
+    <div id="mouse-glow"></div>
+  </div>
+  <script is:inline>
+    (function () {
+      var glow = document.getElementById('mouse-glow');
+      if (!glow) return;
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+      // --mx/--my live on the root element (not just the glow) so any
+      // .shine-text element elsewhere on the page — the gradient name text
+      // — can read the same cursor position via CSS inheritance.
+      var root = document.documentElement;
+      var raf = null;
+      var settleTimer = null;
+      window.addEventListener(
+        'mousemove',
+        function (e) {
+          if (raf) return;
+          raf = requestAnimationFrame(function () {
+            raf = null;
+            var dx = (e.clientX / window.innerWidth - 0.5) * 180;
+            var dy = (e.clientY / window.innerHeight - 0.5) * 100;
+            root.style.setProperty('--mx', dx.toFixed(1) + 'px');
+            root.style.setProperty('--my', dy.toFixed(1) + 'px');
+            // A little swell on movement, like a surface being disturbed —
+            // settles back once the cursor stops.
+            glow.style.setProperty('--s', '1.08');
+          });
+          clearTimeout(settleTimer);
+          settleTimer = setTimeout(function () {
+            glow.style.setProperty('--s', '1');
+          }, 250);
+        },
+        { passive: true }
+      );
+    })();
+  </script>
+
   <!-- Hero -->
   <section class="relative z-10 min-h-screen flex flex-col items-center justify-center px-6 text-center">
     <p id="hero-eyebrow" class="mono text-xs uppercase tracking-[0.3em] text-blue-400 mb-6 animate-fade-up-delay-1">
@@ -20,7 +66,7 @@ import { experiences, skills, links } from '../data/content';
         </span>
       </h1>
       <h1 class="text-6xl md:text-8xl font-black leading-none tracking-tight mb-10 animate-fade-up-delay-2">
-        <span class="bg-gradient-to-br from-blue-400 via-violet-400 to-violet-600 bg-clip-text text-transparent">
+        <span class="shine-text">
           Kanduri
         </span>
       </h1>
@@ -38,7 +84,23 @@ import { experiences, skills, links } from '../data/content';
         var email = (params.get('e') || '').trim();
 
         var CAL_LINK = 'phaneendra-kanduri/30min';
+        var CAL_URL = 'https://cal.com/' + CAL_LINK;
         var calInitialized = false;
+        var embedLoaded = false;
+
+        // The <head> script adds .is-cold-email before first paint, which
+        // hides #hero-eyebrow / #hero-headline so the personalized copy can
+        // be written in without a visible swap. revealHero() undoes that,
+        // and is wired to run up front, on DOMContentLoaded, and on a timer
+        // so the hero can never stay hidden even if the code below throws.
+        function revealHero() {
+          ['hero-eyebrow', 'hero-headline'].forEach(function (id) {
+            var el = document.getElementById(id);
+            if (el) el.style.visibility = 'visible';
+          });
+        }
+        window.addEventListener('DOMContentLoaded', revealHero);
+        setTimeout(revealHero, 2000);
 
         // Official Cal.com embed loader (https://cal.com/docs/embed).
         // Idempotent: safe to call more than once, only injects embed.js once.
@@ -54,7 +116,13 @@ import { experiences, skills, links } from '../data/content';
               if (!cal.loaded) {
                 cal.ns = {};
                 cal.q = cal.q || [];
-                d.head.appendChild(d.createElement('script')).src = A;
+                let s = d.createElement('script');
+                s.src = A;
+                // Instrumentation on the official loader so the click
+                // handler can fall back to a plain link when embed.js is
+                // blocked (adblocker) or never loads.
+                s.onload = function () { embedLoaded = true; };
+                d.head.appendChild(s);
                 cal.loaded = true;
               }
               if (ar[0] === L) {
@@ -74,8 +142,49 @@ import { experiences, skills, links } from '../data/content';
           window.Cal('init', { origin: 'https://cal.com' });
         }
 
+        // Cal.com's embed shows its own loading spinner inside
+        // <cal-modal-box>'s shadow DOM while the booking iframe loads.
+        // Forcing that spinner's display off directly (an earlier version
+        // of this) broke the popup entirely — Cal's own script likely ties
+        // "loading finished, reveal content" to an event on the spinner
+        // itself, so killing it pre-empted that signal. Safer: don't touch
+        // Cal's internal DOM/state at all. Just slide the whole modal
+        // off-screen the instant it exists, and slide it back once the
+        // booking iframe (a normal, reliable DOM element) fires its own
+        // native 'load' event. Polls briefly since the modal + iframe don't
+        // exist until Cal('modal', ...) has run.
+        function revealCalModalWhenReady() {
+          var attempts = 0;
+          var timer = setInterval(function () {
+            attempts++;
+            var box = document.querySelector('cal-modal-box');
+            var backdrop = box && box.shadowRoot && box.shadowRoot.querySelector('.my-backdrop');
+            var iframe = box && box.querySelector('iframe');
+            if (backdrop && iframe) {
+              clearInterval(timer);
+              backdrop.style.transform = 'translateX(200vw)';
+              backdrop.style.opacity = '0';
+              var revealed = false;
+              var reveal = function () {
+                if (revealed) return;
+                revealed = true;
+                backdrop.style.transition = 'opacity 0.25s ease';
+                backdrop.style.transform = 'translateX(0)';
+                backdrop.style.opacity = '1';
+              };
+              iframe.addEventListener('load', reveal, { once: true });
+              // Failsafe: never leave it hidden forever if 'load' never
+              // fires for some reason.
+              setTimeout(reveal, 6000);
+            } else if (attempts > 40) {
+              clearInterval(timer); // ~2s — give up quietly, modal shows as normal
+            }
+          }, 50);
+        }
+
         function openCalPopup() {
           ensureCalLoaded();
+          revealCalModalWhenReady();
           window.Cal('modal', {
             calLink: CAL_LINK,
             config: {
@@ -86,17 +195,44 @@ import { experiences, skills, links } from '../data/content';
           });
         }
 
+        // Left-click on the "Book a call" link opens the modal; the link's
+        // own href (https://cal.com/…) stays the fallback when JS or the
+        // embed fail.
+        function handleBookClick(e) {
+          if (e && e.preventDefault) e.preventDefault();
+          try {
+            openCalPopup();
+          } catch (err) {
+            window.location.href = CAL_URL;
+            return;
+          }
+          // If embed.js hasn't loaded within a few seconds (adblocker,
+          // offline, CDN failure), stop waiting and send the visitor to the
+          // booking page instead of leaving them on a dead click.
+          setTimeout(function () {
+            if (!embedLoaded) window.location.href = CAL_URL;
+          }, 4000);
+        }
+
         // --- persistent manual CTA: works for any visitor, any time,
         // independent of the once-per-session auto-popup below.
         // Delegated on document since #book-call-btn is parsed after this
         // script runs — a direct getElementById here would find nothing.
+        // Modifier / non-primary clicks fall through to the link so
+        // "open in new tab" keeps working.
         document.addEventListener('click', function (e) {
+          if (e.defaultPrevented) return;
+          if (e.button && e.button !== 0) return;
+          if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
           if (e.target.closest && e.target.closest('#book-call-btn')) {
-            openCalPopup();
+            handleBookClick(e);
           }
         });
 
-        if (utmMedium !== 'email') return;
+        if (utmMedium !== 'email') {
+          revealHero();
+          return;
+        }
 
         // --- eyebrow label: swap "Senior Frontend Engineer" for the company ---
         if (co) {
@@ -105,23 +241,22 @@ import { experiences, skills, links } from '../data/content';
         }
 
         // --- Task 2: personalize the hero headline ---
-        var text = null;
+        // Only the visitor's name gets the shine-text treatment; the rest
+        // of the sentence stays plain, inheriting the page's normal text
+        // color, so the name is the one thing that pops.
         if (fn) {
-          text = 'Hi ' + fn + '. Got 15 minutes?';
-        }
-
-        if (text) {
           var headline = document.getElementById('hero-headline');
           if (headline) {
             headline.innerHTML = '';
             var h1 = document.createElement('h1');
             h1.className =
               'text-4xl md:text-6xl font-black leading-tight tracking-tight mb-10 animate-fade-up-delay-2';
+            h1.appendChild(document.createTextNode('Hi '));
             var span = document.createElement('span');
-            span.className =
-              'bg-gradient-to-r from-white via-slate-200 to-slate-300 bg-clip-text text-transparent';
-            span.textContent = text;
+            span.className = 'shine-text';
+            span.textContent = fn;
             h1.appendChild(span);
+            h1.appendChild(document.createTextNode('. Got 15 minutes?'));
             headline.appendChild(h1);
 
             // The headline no longer says who this site belongs to once it
@@ -130,10 +265,14 @@ import { experiences, skills, links } from '../data/content';
             var intro = document.createElement('p');
             intro.className = 'text-sm text-slate-400 mb-4 animate-fade-up-delay-3';
             intro.innerHTML =
-              "I'm <span class=\"font-semibold text-slate-200\">Phaneendra Kanduri</span>, frontend engineer at Confluent (an IBM company).";
+              "I'm <span class=\"font-semibold shine-text\">Phaneendra Kanduri</span>, frontend engineer at Confluent (an IBM company).";
             headline.insertAdjacentElement('afterend', intro);
           }
         }
+
+        // Personalized copy is in place (or there was nothing to change) —
+        // now it's safe to reveal the hero.
+        revealHero();
 
         // --- Task 4: gated, delayed, prefilled Cal.com popup ---
         if (!email) return;
@@ -160,13 +299,15 @@ import { experiences, skills, links } from '../data/content';
       Enterprise SaaS &nbsp;·&nbsp; Healthcare &nbsp;·&nbsp; HR Tech
     </p>
 
-    <button
+    <a
       id="book-call-btn"
-      type="button"
-      class="mono text-xs uppercase tracking-widest px-6 py-3 mb-8 rounded-full border border-blue-500/50 text-blue-300 hover:bg-blue-500/10 hover:border-blue-400 hover:text-blue-200 transition-colors animate-fade-up-delay-4"
+      href="https://cal.com/phaneendra-kanduri/30min"
+      target="_blank"
+      rel="noopener noreferrer"
+      class="inline-block mono text-xs uppercase tracking-widest px-6 py-3 mb-8 rounded-full border border-blue-500/50 text-blue-300 hover:bg-blue-500/10 hover:border-blue-400 hover:text-blue-200 transition-colors animate-fade-up-delay-4"
     >
       Book a call
-    </button>
+    </a>
 
     <div class="flex justify-center gap-4 animate-fade-up-delay-4">
       <a href="https://github.com/9thQuadrant" target="_blank" rel="noopener noreferrer" aria-label="GitHub"
@@ -293,7 +434,11 @@ import { experiences, skills, links } from '../data/content';
   </footer>
 </Base>
 
-<style>
+<style is:global>
+  /* is:global (not Astro's default scoped style): .shine-text gets applied
+     to spans created at runtime via document.createElement in the
+     personalization script, which never receive Astro's scope attribute —
+     a scoped rule would silently never match them. */
   .icon-link {
     display: flex;
     align-items: center;
@@ -309,5 +454,72 @@ import { experiences, skills, links } from '../data/content';
   .icon-link:hover {
     border-color: rgb(96 165 250); /* blue-400 */
     color: rgb(96 165 250);
+  }
+
+  #mouse-glow-wrap {
+    position: fixed;
+    top: -220px;
+    left: 50%;
+    width: 640px;
+    height: 420px;
+    transform: translate(-50%, 0);
+    pointer-events: none;
+    z-index: 1;
+    opacity: 1;
+  }
+
+  #mouse-glow {
+    width: 100%;
+    height: 100%;
+    background: conic-gradient(from 0deg, #60a5fa, #a78bfa, #22d3ee, #7c3aed, #60a5fa);
+    filter: blur(100px);
+    opacity: 0.45;
+    /* Position follows the cursor; scale gives it a brief "swell" on
+       movement, like a disturbed water surface — the elastic easing lets
+       it overshoot slightly and settle rather than snapping into place. */
+    transform: translate(var(--mx, 0px), var(--my, 0px)) scale(var(--s, 1));
+    transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+    will-change: transform;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    #mouse-glow-wrap {
+      opacity: 0;
+      animation: mouse-glow-enter 1s ease-out forwards;
+    }
+
+    #mouse-glow {
+      animation: mouse-glow-shift 18s linear infinite;
+    }
+  }
+
+  @keyframes mouse-glow-enter {
+    from { opacity: 0; transform: translate(-50%, -120px); }
+    to   { opacity: 1; transform: translate(-50%, 0); }
+  }
+
+  @keyframes mouse-glow-shift {
+    0% { filter: blur(100px) hue-rotate(0deg); }
+    100% { filter: blur(100px) hue-rotate(360deg); }
+  }
+
+  /* Same idea as the ambient glow, applied to text: a gradient bigger than
+     the text itself, panned by the same --mx/--my the glow uses, so both
+     shift together with the cursor. Falls back to a static gradient with
+     no motion if reduced-motion is set (the --mx/--my custom properties
+     are simply never updated in that case). */
+  .shine-text {
+    /* Linear, not conic like #mouse-glow above — a conic gradient has a
+       center vertex where all its color bands converge, which showed up
+       as a visible seam in the text no matter how it was positioned.
+       A linear gradient is just a smooth directional blend with no such
+       point, so there's nothing to hide — same 4 colors, no artifact. */
+    background-image: linear-gradient(115deg, #60a5fa 0%, #a78bfa 33%, #22d3ee 66%, #7c3aed 100%);
+    background-size: 200% 200%;
+    background-position: calc(50% + var(--mx, 0px)) calc(50% + var(--my, 0px));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    transition: background-position 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
   }
 </style>

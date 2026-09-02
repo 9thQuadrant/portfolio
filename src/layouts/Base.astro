@@ -17,12 +17,34 @@ const {
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content={description} />
     <title>{title}</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap"
-      rel="stylesheet"
+      rel="preload"
+      as="font"
+      type="font/woff2"
+      href="/fonts/inter-latin.woff2"
+      crossorigin
     />
+    <link
+      rel="preload"
+      as="font"
+      type="font/woff2"
+      href="/fonts/jetbrains-mono-latin.woff2"
+      crossorigin
+    />
+    <script is:inline>
+      // Flag a cold-email visit on <html> before first paint so the hero
+      // renders the personalized headline directly instead of swapping it
+      // in after paint. Pairs with the .is-cold-email rule in the global
+      // stylesheet and the rewrite in src/pages/index.astro.
+      (function () {
+        try {
+          var p = new URLSearchParams(window.location.search);
+          if (p.get('utm_medium') === 'email' && (p.get('fn') || '').trim()) {
+            document.documentElement.classList.add('is-cold-email');
+          }
+        } catch (e) {}
+      })();
+    </script>
   </head>
 <!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-PR1ZE2VWBN"></script>
@@ -69,6 +91,27 @@ document.head.appendChild(o)}initApollo();</script>
 </html>
 
 <style is:global>
+  /* Self-hosted, Latin-subset variable fonts (Inter + JetBrains Mono, both
+     SIL OFL). Served from our own origin so rendering never depends on
+     fonts.googleapis.com / fonts.gstatic.com being reachable — a proxy or
+     privacy filter mangling those was dropping every digit to a .notdef
+     tofu box. One file per family covers all weights via the wght axis. */
+  @font-face {
+    font-family: 'Inter';
+    font-style: normal;
+    font-weight: 100 900;
+    font-display: swap;
+    src: url('/fonts/inter-latin.woff2') format('woff2');
+  }
+
+  @font-face {
+    font-family: 'JetBrains Mono';
+    font-style: normal;
+    font-weight: 400 800;
+    font-display: swap;
+    src: url('/fonts/jetbrains-mono-latin.woff2') format('woff2');
+  }
+
   * {
     box-sizing: border-box;
     margin: 0;
@@ -119,6 +162,15 @@ document.head.appendChild(o)}initApollo();</script>
   .animate-fade-up-delay-2 { animation: fade-up 0.7s 0.2s ease-out both; }
   .animate-fade-up-delay-3 { animation: fade-up 0.7s 0.35s ease-out both; }
   .animate-fade-up-delay-4 { animation: fade-up 0.7s 0.5s ease-out both; }
+
+  /* Cold-email visits: keep the hero hidden until index.astro has written
+     the personalized headline, so visitors never see the default copy
+     paint and get replaced. JS reveals it immediately (with a failsafe
+     timer). visibility keeps the layout box, so there's no layout shift. */
+  .is-cold-email #hero-eyebrow,
+  .is-cold-email #hero-headline {
+    visibility: hidden;
+  }
 
   .animate-bob {
     animation: bob 2s ease-in-out infinite;
