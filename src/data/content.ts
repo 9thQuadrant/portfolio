@@ -37,11 +37,11 @@ export interface Experience {
       period: "Aug 2019 – Mar 2024",
       location: "Onsite",
       achievements: [
-        "Reduced frontend load from ~30s to ~5s across 5,000+ active users",
-        "Led Angular upgrade from v9 → v15 standalone components across ~500 components with a team of 12–15 engineers",
-        "Built React PWA from scratch, reducing load times ~30%; migrated Chrome extension from vanilla JS to React + TypeScript",
-        "Introduced pre-commit hooks, documented anti-patterns, reduced PR cycle time",
-        "Mentored engineers who were subsequently promoted to senior; delivered WCAG + GDPR features for Fortune 500 EU clients",
+        "Reduced frontend load time from ~30s to ~5s across a product serving 5,000+ active users.",
+        "Led the Angular v9 → v15 upgrade to standalone components across ~500 components with a team of 12–15 engineers.",
+        "Built a React PWA from scratch that cut load times by ~30%, and migrated a Chrome extension from vanilla JS to React + TypeScript.",
+        "Introduced pre-commit hooks and documented common anti-patterns, reducing PR cycle time.",
+        "Mentored engineers who were subsequently promoted to senior, and delivered WCAG and GDPR features for Fortune 500 EU clients.",
       ],
     },
     {
@@ -50,9 +50,9 @@ export interface Experience {
       period: "May 2017 – Aug 2019",
       location: "Onsite",
       achievements: [
-        "Led 2-person team to build real-time lead-generating chatbot from scratch — owned stack selection, architecture, and delivery",
-        "Built campaign decision tree visualizer with D3.js; designed 2NF schema with JSON serialization",
-        "Delivered VtigerCRM and Vicidial telephony integration",
+        "Led a 2-person team to build a real-time lead-generating chatbot from scratch, owning stack selection, architecture, and delivery.",
+        "Built a campaign decision-tree visualizer with D3.js and designed a 2NF schema with JSON serialization.",
+        "Delivered a VtigerCRM and Vicidial telephony integration.",
       ],
     },
   ];
@@ -74,6 +74,6 @@ export interface Experience {
   export const links = [
     { label: "GitHub", sub: "9thQuadrant", href: "https://github.com/9thQuadrant" },
     { label: "LinkedIn", sub: "phaneendracharyulu", href: "https://www.linkedin.com/in/phaneendracharyulu" },
-    { label: "StackOverflow", sub: "400+ reputation", href: "https://stackoverflow.com/users/3985774/phaneendra-charyulu-kanduri" },
+    { label: "Stack Overflow", sub: "400+ reputation", href: "https://stackoverflow.com/users/3985774/phaneendra-charyulu-kanduri" },
     { label: "Dev.to Blog", sub: "9thquadrant", href: "https://dev.to/9thquadrant" },
   ];

@@ -1,46 +1,160 @@
 ---
-const stars = Array.from({ length: 70 }, (_, i) => {
-  const seed = i * 137.508; // golden angle
-  return {
-    id: i,
-    x: (seed * 3.14159) % 100,
-    y: (seed * 2.71828) % 100,
-    size: 1 + ((seed * 1.41421) % 2),
-    opacity: 0.15 + ((seed * 0.0113) % 0.35),
-    duration: 3 + ((seed * 0.0071) % 4),
-    delay: (seed * 0.013) % 5,
-  };
-});
+// Interactive phyllotaxis dot field: the seed-head spiral of a sunflower
+// (each dot at golden-angle 137.5° from the last, radius ∝ √index), drawn
+// once on a <canvas> behind everything. At rest it's a faint spiral
+// texture; a soft radius around the cursor lifts the nearby dots —
+// brighter, larger, and pulled gently toward the pointer. The render loop
+// parks itself the moment the pointer stops, and the field is fully static
+// under prefers-reduced-motion.
 ---
 
-<div class="stars-container" aria-hidden="true">
-  {stars.map((s) => (
-    <div
-      class="star"
-      style={`
-        left: ${s.x}%;
-        top: ${s.y}%;
-        width: ${s.size}px;
-        height: ${s.size}px;
-        opacity: ${s.opacity};
-        animation: twinkle ${s.duration}s ${s.delay}s ease-in-out infinite;
-      `}
-    />
-  ))}
-</div>
+<canvas id="dot-grid" aria-hidden="true"></canvas>
+
+<script is:inline>
+  (function () {
+    var canvas = document.getElementById('dot-grid');
+    if (!canvas) return;
+    var ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    var GOLDEN = Math.PI * (3 - Math.sqrt(5)); // ~137.507°, the sunflower angle
+    var SPACING = 9.3; // seed spacing constant: r = SPACING * √index (tight lattice)
+    var BASE_R = 1.55; // resting dot radius
+    var BASE_A = 0.13; // resting dot alpha at the centre of the head
+    var EDGE_FADE = 0.72; // how much dimmer the outermost dots are
+    var EDGE_CURVE = 1.5; // >1 pushes the fade toward the edge
+    var HOT_R = 2.65; // radius directly under the cursor
+    var HOT_A = 0.6; // alpha directly under the cursor
+    var INFLUENCE = 155; // cursor influence radius
+    var PULL = 7; // max px a dot drifts toward the cursor
+    var DOT_RGB = '148, 163, 184'; // slate-400
+    var TAU = 6.283185307179586;
+
+    var dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+    var w = 0;
+    var h = 0;
+    var seeds = []; // { x, y, a }  — a = per-seed base alpha (radial fade)
+    // mx/my — real pointer; tx/ty — eased "influence" point chasing it
+    var mx = -9999;
+    var my = -9999;
+    var tx = -9999;
+    var ty = -9999;
+    var raf = null;
+
+    function build() {
+      w = window.innerWidth;
+      h = window.innerHeight;
+      canvas.width = Math.round(w * dpr);
+      canvas.height = Math.round(h * dpr);
+      canvas.style.width = w + 'px';
+      canvas.style.height = h + 'px';
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+      // head centred horizontally, a little above the middle so the densest
+      // part of the spiral doesn't sit dead behind the headline
+      var cx = w * 0.5;
+      var cy = h * 0.46;
+
+      // enough seeds for the head to reach the farthest corner
+      var dxm = Math.max(cx, w - cx);
+      var dym = Math.max(cy, h - cy);
+      var maxR = Math.sqrt(dxm * dxm + dym * dym) + SPACING;
+      var count = Math.min(Math.ceil((maxR / SPACING) * (maxR / SPACING)), 16000);
+
+      seeds.length = 0;
+      for (var i = 0; i < count; i++) {
+        var r = SPACING * Math.sqrt(i);
+        var ang = i * GOLDEN;
+        seeds.push({
+          x: cx + r * Math.cos(ang),
+          y: cy + r * Math.sin(ang),
+          a: BASE_A * (1 - EDGE_FADE * Math.pow(r / maxR, EDGE_CURVE)),
+        });
+      }
+      draw();
+    }
+
+    function draw() {
+      ctx.clearRect(0, 0, w, h);
+      var live = tx > -9000;
+      for (var i = 0; i < seeds.length; i++) {
+        var s = seeds[i];
+        var x = s.x;
+        var y = s.y;
+        if (x < -8 || x > w + 8 || y < -8 || y > h + 8) continue;
+
+        var t = 0;
+        var px = x;
+        var py = y;
+        if (live) {
+          var dx = x - tx;
+          var dy = y - ty;
+          var dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist < INFLUENCE) {
+            t = 1 - dist / INFLUENCE;
+            t = t * t; // gentle falloff
+            var d = dist || 1;
+            px = x - (dx / d) * PULL * t;
+            py = y - (dy / d) * PULL * t;
+          }
+        }
+
+        var rad = BASE_R + (HOT_R - BASE_R) * t;
+        var alpha = s.a + (HOT_A - s.a) * t;
+        ctx.beginPath();
+        ctx.arc(px, py, rad, 0, TAU);
+        ctx.fillStyle = 'rgba(' + DOT_RGB + ', ' + alpha.toFixed(3) + ')';
+        ctx.fill();
+      }
+    }
+
+    function tick() {
+      tx += (mx - tx) * 0.14;
+      ty += (my - ty) * 0.14;
+      draw();
+      if (Math.abs(mx - tx) > 0.4 || Math.abs(my - ty) > 0.4) {
+        raf = requestAnimationFrame(tick);
+      } else {
+        raf = null;
+        draw(); // settle exactly on target
+      }
+    }
+
+    function onMove(e) {
+      mx = e.clientX;
+      my = e.clientY;
+      if (tx < -9000) {
+        tx = mx; // first movement — start at the cursor, no fly-in
+        ty = my;
+      }
+      if (!raf) raf = requestAnimationFrame(tick);
+    }
+
+    function onLeave() {
+      mx = -9999;
+      my = -9999;
+      if (!raf) raf = requestAnimationFrame(tick);
+    }
+
+    window.addEventListener('resize', build, { passive: true });
+    build();
+
+    if (!reduced) {
+      window.addEventListener('mousemove', onMove, { passive: true });
+      document.addEventListener('mouseleave', onLeave, { passive: true });
+    }
+  })();
+</script>
 
 <style>
-  .stars-container {
+  #dot-grid {
     position: fixed;
     inset: 0;
+    width: 100%;
+    height: 100%;
     pointer-events: none;
     z-index: 0;
-    overflow: hidden;
-  }
-
-  .star {
-    position: absolute;
-    border-radius: 50%;
-    background: white;
   }
 </style>
