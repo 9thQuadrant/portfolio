@@ -47,7 +47,7 @@ import { experiences, skills, links } from '../data/content';
   </script>
 
   <!-- Hero -->
-  <section class="relative z-10 min-h-screen flex flex-col items-center justify-center px-6 text-center">
+  <section class="relative z-10 min-h-screen flex flex-col items-center justify-center px-6 pb-28 text-center">
     <p id="hero-eyebrow" class="hero-eyebrow animate-fade-up-delay-1">
       Senior Frontend Engineer
     </p>
@@ -56,7 +56,7 @@ import { experiences, skills, links } from '../data/content';
       <h1 class="text-6xl md:text-8xl font-black leading-none tracking-tight mb-2 animate-fade-up-delay-2 text-[color:var(--heading)]">
         Phaneendra
       </h1>
-      <h1 class="text-6xl md:text-8xl font-black leading-none tracking-tight mb-8 animate-fade-up-delay-2">
+      <h1 class="text-6xl md:text-8xl font-black leading-none tracking-tight mb-7 animate-fade-up-delay-2">
         <span class="shine-text">
           Kanduri
         </span>
@@ -246,7 +246,7 @@ import { experiences, skills, links } from '../data/content';
       Enterprise SaaS &nbsp;·&nbsp; Healthcare &nbsp;·&nbsp; HR Tech
     </p>
 
-    <p class="text-sm font-medium text-[color:var(--text-secondary)] mb-8 animate-fade-up-delay-3">
+    <p class="text-sm font-medium text-[color:var(--text-secondary)] mb-6 animate-fade-up-delay-3">
       Open to relocate &nbsp;·&nbsp; Available in 30 days
     </p>
 
@@ -255,7 +255,7 @@ import { experiences, skills, links } from '../data/content';
       href="https://cal.com/phaneendra-kanduri/30min"
       target="_blank"
       rel="noopener noreferrer"
-      class="shiny-cta inline-block text-sm font-semibold lowercase tracking-wide px-7 py-3.5 mb-6 rounded-full border text-[color:var(--heading)] transition-colors"
+      class="shiny-cta inline-block text-sm font-semibold lowercase tracking-wide px-7 py-3.5 mb-5 rounded-full border text-[color:var(--heading)] transition-colors"
     >
       let's talk!
     </a>
@@ -293,16 +293,37 @@ import { experiences, skills, links } from '../data/content';
       </a>
     </div>
 
-    <div class="absolute bottom-5 left-1/2 animate-bob" aria-hidden="true">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-        class="text-[color:var(--text-faint)]" stroke-linecap="round" stroke-linejoin="round">
-        <line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/>
-      </svg>
-    </div>
+    <a href="#experience" id="scroll-cue" aria-label="Scroll down to see experience">
+      <span class="scroll-cue__text">Scroll</span>
+      <span class="scroll-cue__chevrons" aria-hidden="true">
+        <svg viewBox="0 0 28 12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 3 14 9 25 3"/></svg>
+        <svg viewBox="0 0 28 12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 3 14 9 25 3"/></svg>
+        <svg viewBox="0 0 28 12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 3 14 9 25 3"/></svg>
+      </span>
+    </a>
   </section>
+  <script is:inline>
+    // fade the scroll cue out once the visitor has clearly started scrolling
+    (function () {
+      var cue = document.getElementById('scroll-cue');
+      if (!cue) return;
+      var hidden = false;
+      window.addEventListener(
+        'scroll',
+        function () {
+          var should = window.scrollY > 60;
+          if (should !== hidden) {
+            hidden = should;
+            cue.classList.toggle('is-hidden', should);
+          }
+        },
+        { passive: true }
+      );
+    })();
+  </script>
 
   <!-- Experience -->
-  <section class="relative z-10 py-24 px-6">
+  <section id="experience" class="relative z-10 py-24 px-6">
     <div class="max-w-3xl mx-auto">
       <p class="section-label">Experience</p>
       <div class="space-y-14">
@@ -574,6 +595,115 @@ import { experiences, skills, links } from '../data/content';
     text-transform: uppercase;
     color: var(--heading);
     margin-bottom: 0.85rem;
+  }
+
+  /* ---- scroll cue --------------------------------------------------- */
+  /* Deliberately loud: a "SCROLL" label plus three chevrons that cascade
+     downward on a loop, tinted in the link colour with a soft glow so it
+     reads as an obvious affordance. Fades out once the visitor scrolls. */
+  #scroll-cue {
+    position: absolute;
+    bottom: 2.5rem;
+    left: 50%;
+    transform: translateX(-50%);
+    isolation: isolate;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.4rem;
+    text-decoration: none;
+    color: var(--link);
+    transition: opacity 0.4s ease, visibility 0.4s ease, color 0.2s ease;
+  }
+  #scroll-cue:hover {
+    color: var(--heading);
+  }
+  #scroll-cue.is-hidden {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+  }
+
+  /* "Sonar" ripple: a ring that starts enclosing the whole SCROLL +
+     chevrons element, drifts out ~100px, and dissolves as it goes. Two
+     rings half a cycle apart so there's always one travelling. */
+  #scroll-cue::before,
+  #scroll-cue::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 96px; /* encloses the label + chevrons */
+    height: 96px;
+    margin: -48px 0 0 -48px;
+    border-radius: 50%;
+    border: 2px solid var(--link);
+    background: radial-gradient(circle, var(--cue-glow) 0%, transparent 60%);
+    z-index: -1;
+    pointer-events: none;
+    /* 4s life, two rings 2s apart → a new ripple emanates every 2 seconds */
+    animation: cue-ripple 4s ease-out infinite;
+  }
+  #scroll-cue::after {
+    animation-delay: 2s;
+  }
+
+  /* scale 2 × 96px ≈ 192px → ~48px of travel past the 96px start; opacity
+     is front-loaded so the ring is bright at the origin and nearly gone by
+     the time it has expanded */
+  @keyframes cue-ripple {
+    0%   { transform: scale(0.92); opacity: 0; }
+    12%  { opacity: 0.8; }
+    55%  { opacity: 0.06; }
+    100% { transform: scale(2); opacity: 0; }
+  }
+
+  .scroll-cue__text {
+    font-size: 0.78rem;
+    font-weight: 800;
+    letter-spacing: 0.26em;
+    text-transform: uppercase;
+    text-shadow: 0 0 14px var(--cue-glow);
+    animation: cue-text-pulse 2s ease-in-out infinite;
+  }
+
+  .scroll-cue__chevrons {
+    position: relative;
+    width: 32px;
+    height: 24px;
+    filter: drop-shadow(0 0 10px var(--cue-glow));
+  }
+  .scroll-cue__chevrons svg {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 32px;
+    height: 13px;
+    opacity: 0;
+    animation: cue-chev 1.7s ease-in-out infinite;
+  }
+  .scroll-cue__chevrons svg:nth-child(2) { animation-delay: 0.2s; }
+  .scroll-cue__chevrons svg:nth-child(3) { animation-delay: 0.4s; }
+
+  @keyframes cue-chev {
+    0%   { opacity: 0; transform: translateY(-6px); }
+    35%  { opacity: 1; }
+    70%  { opacity: 0; transform: translateY(12px); }
+    100% { opacity: 0; transform: translateY(12px); }
+  }
+  @keyframes cue-text-pulse {
+    0%, 100% { opacity: 0.6; }
+    50%      { opacity: 1; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .scroll-cue__chevrons svg { animation: none; opacity: 0.9; }
+    .scroll-cue__chevrons svg:nth-child(1) { top: -2px; }
+    .scroll-cue__chevrons svg:nth-child(2) { top: 5px; }
+    .scroll-cue__chevrons svg:nth-child(3) { top: 12px; }
+    .scroll-cue__text { animation: none; opacity: 1; }
+    #scroll-cue::before,
+    #scroll-cue::after { animation: none; opacity: 0.25; transform: scale(1.3); }
   }
 
   /* Reusable gradient outline that fades in on hover, for bordered cards.

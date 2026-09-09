@@ -205,6 +205,7 @@ document.head.appendChild(o)}initApollo();</script>
     --dot-rgb: 148, 163, 184;
     --shadow-ink: rgba(2, 4, 9, 0.92);
     --card-shadow: none;
+    --cue-glow: rgba(116, 168, 255, 0.5);
   }
 
   :root[data-theme='light'] {
@@ -238,6 +239,7 @@ document.head.appendChild(o)}initApollo();</script>
     --dot-rgb: 71, 85, 105;
     --shadow-ink: rgba(246, 245, 242, 0.85);
     --card-shadow: 0 1px 2px rgba(20, 25, 40, 0.04), 0 4px 14px -6px rgba(20, 25, 40, 0.1);
+    --cue-glow: rgba(37, 99, 235, 0.28);
   }
 
   /* gradient accent reused site-wide (label bars, card edges, bullet dots,
@@ -312,11 +314,6 @@ document.head.appendChild(o)}initApollo();</script>
     to   { opacity: 1; }
   }
 
-  @keyframes bob {
-    0%, 100% { transform: translateY(0) translateX(-50%); }
-    50%       { transform: translateY(6px) translateX(-50%); }
-  }
-
   .animate-fade-up {
     animation: fade-up 0.7s ease-out forwards;
   }
@@ -333,9 +330,5 @@ document.head.appendChild(o)}initApollo();</script>
   .is-cold-email #hero-eyebrow,
   .is-cold-email #hero-headline {
     visibility: hidden;
-  }
-
-  .animate-bob {
-    animation: bob 2s ease-in-out infinite;
   }
 </style>
