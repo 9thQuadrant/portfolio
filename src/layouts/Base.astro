@@ -21,7 +21,7 @@ const {
       rel="preload"
       as="font"
       type="font/woff2"
-      href="/fonts/inter-latin.woff2"
+      href="/fonts/source-sans-3-latin.woff2"
       crossorigin
     />
     <link
@@ -32,6 +32,25 @@ const {
       crossorigin
     />
     <script is:inline>
+      // Resolve the colour theme before first paint (no flash). Stored
+      // choice wins; otherwise follow the OS setting. Pairs with the
+      // [data-theme] token blocks in the global stylesheet and the toggle
+      // button wired up further down.
+      (function () {
+        try {
+          var stored = localStorage.getItem('theme');
+          var theme =
+            stored === 'light' || stored === 'dark'
+              ? stored
+              : window.matchMedia('(prefers-color-scheme: dark)').matches
+                ? 'dark'
+                : 'light';
+          document.documentElement.setAttribute('data-theme', theme);
+        } catch (e) {
+          document.documentElement.setAttribute('data-theme', 'dark');
+        }
+      })();
+
       // Flag a cold-email visit on <html> before first paint so the hero
       // renders the personalized headline directly instead of swapping it
       // in after paint. Pairs with the .is-cold-email rule in the global
@@ -85,23 +104,60 @@ o.src="https://assets.apollo.io/micro/website-tracker/tracker.iife.js?nocache="+
 o.onload=function(){window.trackingFunctions.onLoad({appId:"696a6677ac0bae0019f52f1f"})},
 document.head.appendChild(o)}initApollo();</script>
 
-  <body class="bg-[#070a0f] text-white antialiased">
+  <body class="antialiased">
+    <button id="theme-toggle" type="button" aria-label="Switch to light theme">
+      <!-- shown in dark mode: tap for light -->
+      <svg class="icon-sun" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <circle cx="12" cy="12" r="4"/>
+        <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/>
+      </svg>
+      <!-- shown in light mode: tap for dark -->
+      <svg class="icon-moon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+      </svg>
+    </button>
+    <script is:inline>
+      (function () {
+        var btn = document.getElementById('theme-toggle');
+        if (!btn) return;
+        function label() {
+          return document.documentElement.getAttribute('data-theme') === 'light'
+            ? 'Switch to dark theme'
+            : 'Switch to light theme';
+        }
+        btn.setAttribute('aria-label', label());
+        btn.addEventListener('click', function () {
+          var next =
+            document.documentElement.getAttribute('data-theme') === 'light'
+              ? 'dark'
+              : 'light';
+          document.documentElement.setAttribute('data-theme', next);
+          try { localStorage.setItem('theme', next); } catch (e) {}
+          btn.setAttribute('aria-label', label());
+          // let the canvas dot-field recolour itself
+          window.dispatchEvent(new CustomEvent('themechange', { detail: next }));
+        });
+      })();
+    </script>
     <slot />
   </body>
 </html>
 
 <style is:global>
-  /* Self-hosted, Latin-subset variable fonts (Inter + JetBrains Mono, both
+  /* Self-hosted, Latin-subset fonts (Source Sans 3 + JetBrains Mono, both
      SIL OFL). Served from our own origin so rendering never depends on
      fonts.googleapis.com / fonts.gstatic.com being reachable — a proxy or
      privacy filter mangling those was dropping every digit to a .notdef
-     tofu box. One file per family covers all weights via the wght axis. */
+     tofu box. Source Sans 3 is a humanist sans: warmer and easier on the
+     eye than a neutral grotesque, which suits the audience (hiring
+     managers, engineering leaders). JetBrains Mono is kept for the metrics
+     line only. One variable file per family covers every weight. */
   @font-face {
-    font-family: 'Inter';
+    font-family: 'Source Sans 3';
     font-style: normal;
-    font-weight: 100 900;
+    font-weight: 200 900;
     font-display: swap;
-    src: url('/fonts/inter-latin.woff2') format('woff2');
+    src: url('/fonts/source-sans-3-latin.woff2') format('woff2');
   }
 
   @font-face {
@@ -110,6 +166,88 @@ document.head.appendChild(o)}initApollo();</script>
     font-weight: 400 800;
     font-display: swap;
     src: url('/fonts/jetbrains-mono-latin.woff2') format('woff2');
+  }
+
+  /* ---------------------------------------------------------------------
+     Semantic colour tokens. Dark is the default; [data-theme="light"]
+     re-points the same names. Every component reads these, never a raw
+     hex, so the toggle is a single attribute flip. Contrast is tuned up
+     from the old palette — body copy now lands well inside WCAG AA. */
+  :root,
+  :root[data-theme='dark'] {
+    --bg: #070a0f;
+    --surface: rgba(226, 236, 255, 0.07); /* cool fill so cards read as cards, not gaps */
+    --surface-hover: rgba(226, 236, 255, 0.11);
+    --border: #33415580; /* slate-700 @ 50% */
+    --border-solid: #3a4a63;
+
+    --heading: #f8fafc;
+    --text: #e7ecf3; /* primary body */
+    --text-secondary: #c7d0de;
+    --text-muted: #9aa7bb; /* meta / labels */
+    --text-faint: #77869c;
+
+    --label: #9cc0ff; /* section eyebrows — bright, clearly visible */
+    --link: #74a8ff;
+
+    --shine-1: #5b9bff;
+    --shine-2: #b98cf0;
+    --shine-3: #ef7d88;
+    --shine-4: #ffc078;
+
+    --aurora-blend: screen;
+    --aurora-opacity: 0.55;
+    --aurora-1: #34d399; /* green  */
+    --aurora-2: #22d3ee; /* cyan   */
+    --aurora-3: #a78bfa; /* violet */
+    --aurora-4: #f472b6; /* pink   */
+
+    --dot-rgb: 148, 163, 184;
+    --shadow-ink: rgba(2, 4, 9, 0.92);
+    --card-shadow: none;
+  }
+
+  :root[data-theme='light'] {
+    --bg: #f6f5f2; /* warm off-white — softer than stark white for older eyes */
+    --surface: #ffffff; /* clean white cards lift off the warm ground */
+    --surface-hover: #fbfaf7;
+    --border: #e2ddd2;
+    --border-solid: #d9d3c6;
+
+    --heading: #16202e;
+    --text: #2b3545; /* ~11:1 on --bg */
+    --text-secondary: #3f4a5c;
+    --text-muted: #59626f;
+    --text-faint: #78808d;
+
+    --label: #4338ca; /* indigo — strong on the light ground */
+    --link: #2563eb;
+
+    --shine-1: #2563eb;
+    --shine-2: #7c3aed;
+    --shine-3: #db2777;
+    --shine-4: #d97706;
+
+    --aurora-blend: multiply;
+    --aurora-opacity: 0.16;
+    --aurora-1: #10b981;
+    --aurora-2: #06b6d4;
+    --aurora-3: #8b5cf6;
+    --aurora-4: #ec4899;
+
+    --dot-rgb: 71, 85, 105;
+    --shadow-ink: rgba(246, 245, 242, 0.85);
+    --card-shadow: 0 1px 2px rgba(20, 25, 40, 0.04), 0 4px 14px -6px rgba(20, 25, 40, 0.1);
+  }
+
+  /* gradient accent reused site-wide (label bars, card edges, bullet dots,
+     icon rings, CTA border) — tracks the theme via the shine tokens */
+  :root {
+    --g1: var(--shine-1);
+    --g2: var(--shine-2);
+    --g3: var(--shine-3);
+    --g4: var(--shine-4);
+    --grad-gemini: linear-gradient(115deg, var(--g1), var(--g2), var(--g3), var(--g4));
   }
 
   * {
@@ -123,16 +261,46 @@ document.head.appendChild(o)}initApollo();</script>
   }
 
   body {
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-family: 'Source Sans 3', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    transition: background-color 0.35s ease, color 0.35s ease;
   }
 
   h1, h2, h3 {
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-family: 'Source Sans 3', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   }
 
   code, .mono {
     font-family: 'JetBrains Mono', 'Cascadia Code', 'Consolas', monospace;
   }
+
+  /* ---- theme toggle ---- */
+  #theme-toggle {
+    position: fixed;
+    top: 1rem;
+    right: 1rem;
+    z-index: 50;
+    width: 40px;
+    height: 40px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    border: 1px solid var(--border-solid);
+    background: var(--surface);
+    color: var(--text-muted);
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    backdrop-filter: blur(6px);
+    transition: color 0.2s, border-color 0.2s, background 0.2s;
+  }
+  #theme-toggle:hover {
+    color: var(--heading);
+    border-color: var(--text-faint);
+  }
+  #theme-toggle .icon-moon { display: none; }
+  :root[data-theme='light'] #theme-toggle .icon-sun { display: none; }
+  :root[data-theme='light'] #theme-toggle .icon-moon { display: block; }
 
   @keyframes fade-up {
     from { opacity: 0; transform: translateY(24px); }

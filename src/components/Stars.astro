@@ -29,8 +29,17 @@
     var HOT_A = 0.6; // alpha directly under the cursor
     var INFLUENCE = 155; // cursor influence radius
     var PULL = 7; // max px a dot drifts toward the cursor
-    var DOT_RGB = '148, 163, 184'; // slate-400
     var TAU = 6.283185307179586;
+
+    // dot colour follows the theme (--dot-rgb token); re-read on toggle
+    var DOT_RGB = '148, 163, 184';
+    function readDotColor() {
+      var v = getComputedStyle(document.documentElement)
+        .getPropertyValue('--dot-rgb')
+        .trim();
+      if (v) DOT_RGB = v;
+    }
+    readDotColor();
 
     var dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
     var w = 0;
@@ -139,6 +148,10 @@
     }
 
     window.addEventListener('resize', build, { passive: true });
+    window.addEventListener('themechange', function () {
+      readDotColor();
+      draw();
+    });
     build();
 
     if (!reduced) {

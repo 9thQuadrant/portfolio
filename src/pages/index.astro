@@ -7,33 +7,28 @@ import { experiences, skills, links } from '../data/content';
 <Base>
   <Stars />
 
-  <!-- Ambient glow: sits at the top of the page, descends into view on
-       load, and reacts to mouse movement like a water surface being
-       disturbed. Three nested layers, each owning exactly one transform /
-       effect so nothing fights:
-         #mouse-glow-wrap  – fixed placement + one-time entrance animation
-         #mouse-glow       – continuous mouse-reactive translate/scale
-         #mouse-glow-core  – the coloured blob: static blur (cached once)
-                             + a slow compositor-only rotate, so the colour
-                             cycle never re-rasterizes the blur on scroll.
-       Self-contained and independent of the cold-email script. -->
-  <div id="mouse-glow-wrap" aria-hidden="true">
-    <div id="mouse-glow">
-      <div id="mouse-glow-core"></div>
+  <!-- Aurora: a soft band of coloured light along the top of the page.
+       Three blurred curtains in aurora hues (green / cyan / violet →
+       pink), each drifting on its own slow loop and blended additively so
+       they mix where they overlap. A bottom mask dissolves the whole thing
+       into the page. The cursor gives it a gentle parallax. -->
+  <div id="aurora-wrap" aria-hidden="true">
+    <div id="aurora">
+      <span class="aurora-band aurora-band--1"></span>
+      <span class="aurora-band aurora-band--2"></span>
+      <span class="aurora-band aurora-band--3"></span>
     </div>
   </div>
   <script is:inline>
     (function () {
-      var glow = document.getElementById('mouse-glow');
-      if (!glow) return;
+      var aurora = document.getElementById('aurora');
+      if (!aurora) return;
       if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
-      // --mx/--my live on the root element (not just the glow) so any
-      // .shine-text element elsewhere on the page — the gradient name text
-      // — can read the same cursor position via CSS inheritance.
+      // --mx/--my live on the root element so the aurora parallax and the
+      // .shine-text gradient sweep both read the same cursor position.
       var root = document.documentElement;
       var raf = null;
-      var settleTimer = null;
       window.addEventListener(
         'mousemove',
         function (e) {
@@ -44,14 +39,7 @@ import { experiences, skills, links } from '../data/content';
             var dy = (e.clientY / window.innerHeight - 0.5) * 100;
             root.style.setProperty('--mx', dx.toFixed(1) + 'px');
             root.style.setProperty('--my', dy.toFixed(1) + 'px');
-            // A little swell on movement, like a surface being disturbed —
-            // settles back once the cursor stops.
-            glow.style.setProperty('--s', '1.08');
           });
-          clearTimeout(settleTimer);
-          settleTimer = setTimeout(function () {
-            glow.style.setProperty('--s', '1');
-          }, 250);
         },
         { passive: true }
       );
@@ -60,17 +48,15 @@ import { experiences, skills, links } from '../data/content';
 
   <!-- Hero -->
   <section class="relative z-10 min-h-screen flex flex-col items-center justify-center px-6 text-center">
-    <p id="hero-eyebrow" class="grad-label mono text-xs uppercase tracking-[0.3em] mb-6 animate-fade-up-delay-1">
+    <p id="hero-eyebrow" class="hero-eyebrow animate-fade-up-delay-1">
       Senior Frontend Engineer
     </p>
 
     <div id="hero-headline">
-      <h1 class="text-6xl md:text-8xl font-black leading-none tracking-tight mb-2 animate-fade-up-delay-2">
-        <span class="bg-gradient-to-r from-white via-slate-200 to-slate-300 bg-clip-text text-transparent">
-          Phaneendra
-        </span>
+      <h1 class="text-6xl md:text-8xl font-black leading-none tracking-tight mb-2 animate-fade-up-delay-2 text-[color:var(--heading)]">
+        Phaneendra
       </h1>
-      <h1 class="text-6xl md:text-8xl font-black leading-none tracking-tight mb-10 animate-fade-up-delay-2">
+      <h1 class="text-6xl md:text-8xl font-black leading-none tracking-tight mb-8 animate-fade-up-delay-2">
         <span class="shine-text">
           Kanduri
         </span>
@@ -154,7 +140,10 @@ import { experiences, skills, links } from '../data/content';
             config: {
               name: fn || undefined,
               email: email || undefined,
-              theme: 'dark',
+              theme:
+                document.documentElement.getAttribute('data-theme') === 'light'
+                  ? 'light'
+                  : 'dark',
             },
           });
         }
@@ -229,7 +218,7 @@ import { experiences, skills, links } from '../data/content';
             // greets the visitor by name — reintroduce it as a small line,
             // with my name weighted so it doesn't disappear into the rest.
             var intro = document.createElement('p');
-            intro.className = 'text-sm text-slate-400 mb-4 animate-fade-up-delay-3';
+            intro.className = 'text-sm text-[color:var(--text-muted)] mb-4 animate-fade-up-delay-3';
             intro.innerHTML =
               "I'm <span class=\"font-semibold shine-text\">Phaneendra Kanduri</span>, frontend engineer at Confluent (an IBM company).";
             headline.insertAdjacentElement('afterend', intro);
@@ -244,17 +233,21 @@ import { experiences, skills, links } from '../data/content';
       })();
     </script>
 
-    <p class="text-base md:text-lg text-slate-400 max-w-lg mx-auto mb-4 leading-relaxed animate-fade-up-delay-3">
+    <p class="text-lg md:text-xl text-[color:var(--text)] max-w-xl mx-auto mb-4 leading-relaxed animate-fade-up-delay-3">
       9+ years turning slow, legacy frontends into fast, accessible products
       for regulated industries and Fortune 500 teams.
     </p>
 
-    <p class="mono text-xs text-slate-200 mb-3 animate-fade-up-delay-3">
+    <p class="mono text-xs md:text-sm text-[color:var(--text-secondary)] mb-3 animate-fade-up-delay-3">
       2s → 0.2s FCP &nbsp;·&nbsp; 20min → 1.5min builds &nbsp;·&nbsp; 30s → 5s load
     </p>
 
-    <p class="mono text-xs text-slate-200 mb-10 animate-fade-up-delay-3">
+    <p class="text-sm text-[color:var(--text-muted)] mb-2.5 animate-fade-up-delay-3">
       Enterprise SaaS &nbsp;·&nbsp; Healthcare &nbsp;·&nbsp; HR Tech
+    </p>
+
+    <p class="text-sm font-medium text-[color:var(--text-secondary)] mb-8 animate-fade-up-delay-3">
+      Open to relocate &nbsp;·&nbsp; Available in 30 days
     </p>
 
     <a
@@ -262,7 +255,7 @@ import { experiences, skills, links } from '../data/content';
       href="https://cal.com/phaneendra-kanduri/30min"
       target="_blank"
       rel="noopener noreferrer"
-      class="shiny-cta inline-block mono text-sm lowercase tracking-wide px-7 py-3.5 mb-8 rounded-full border text-white transition-colors"
+      class="shiny-cta inline-block text-sm font-semibold lowercase tracking-wide px-7 py-3.5 mb-6 rounded-full border text-[color:var(--heading)] transition-colors"
     >
       let's talk!
     </a>
@@ -300,9 +293,9 @@ import { experiences, skills, links } from '../data/content';
       </a>
     </div>
 
-    <div class="absolute bottom-10 left-1/2 animate-bob" aria-hidden="true">
+    <div class="absolute bottom-5 left-1/2 animate-bob" aria-hidden="true">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-        class="text-slate-600" stroke-linecap="round" stroke-linejoin="round">
+        class="text-[color:var(--text-faint)]" stroke-linecap="round" stroke-linejoin="round">
         <line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/>
       </svg>
     </div>
@@ -311,23 +304,23 @@ import { experiences, skills, links } from '../data/content';
   <!-- Experience -->
   <section class="relative z-10 py-24 px-6">
     <div class="max-w-3xl mx-auto">
-      <p class="grad-label mono text-xs uppercase tracking-[0.3em] mb-14">Experience</p>
+      <p class="section-label">Experience</p>
       <div class="space-y-14">
         {experiences.map((exp) => (
-          <div class="grad-bar group border-l border-slate-800 pl-6 transition-colors duration-300">
+          <div class="grad-bar group border-l border-[color:var(--border)] pl-6 transition-colors duration-300">
             <div class="flex flex-wrap justify-between items-start gap-3 mb-4">
               <div>
-                <h3 class="text-xl font-bold text-white">{exp.company}</h3>
-                <p class="text-blue-400 text-sm mt-0.5">{exp.role}</p>
+                <h3 class="text-xl font-bold text-[color:var(--heading)]">{exp.company}</h3>
+                <p class="text-[color:var(--link)] text-sm font-medium mt-0.5">{exp.role}</p>
               </div>
               <div class="w-full sm:w-auto text-left sm:text-right">
-                <p class="mono text-xs text-slate-500">{exp.period}</p>
-                <p class="mono text-xs text-slate-500">{exp.location}</p>
+                <p class="text-xs font-medium tracking-wide text-[color:var(--text-muted)]">{exp.period}</p>
+                <p class="text-xs text-[color:var(--text-faint)]">{exp.location}</p>
               </div>
             </div>
             <ul class="space-y-2.5">
               {exp.achievements.map((a) => (
-                <li class="text-slate-400 text-sm leading-relaxed flex gap-3">
+                <li class="text-[color:var(--text-secondary)] text-sm leading-relaxed flex gap-3">
                   <span class="bullet-dot"></span>
                   <span>{a}</span>
                 </li>
@@ -342,14 +335,14 @@ import { experiences, skills, links } from '../data/content';
   <!-- Skills -->
   <section class="relative z-10 py-24 px-6">
     <div class="max-w-2xl mx-auto">
-      <p class="grad-label mono text-xs uppercase tracking-[0.3em] mb-14">Skills</p>
+      <p class="section-label">Skills</p>
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
         {skills.map((group) => (
-          <div class="grad-edge border border-slate-700 rounded-lg p-5 transition-colors duration-200">
-            <p class="mono text-xs uppercase tracking-widest text-slate-400 mb-3">{group.title}</p>
+          <div class="grad-edge border border-[color:var(--border-solid)] rounded-lg p-5 transition-colors duration-200">
+            <p class="skill-card-title">{group.title}</p>
             <ul class="space-y-1.5">
               {group.items.map((item) => (
-                <li class="text-sm text-slate-300">{item}</li>
+                <li class="text-sm text-[color:var(--text-secondary)]">{item}</li>
               ))}
             </ul>
           </div>
@@ -361,18 +354,18 @@ import { experiences, skills, links } from '../data/content';
   <!-- Links -->
   <section class="relative z-10 py-24 px-6">
     <div class="max-w-2xl mx-auto">
-      <p class="grad-label mono text-xs uppercase tracking-[0.3em] mb-14">Around the web</p>
+      <p class="section-label">Around the web</p>
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
         {links.map((link) => (
           <a href={link.href} target={link.href !== '#' ? '_blank' : undefined}
             rel="noopener noreferrer"
-            class="grad-edge flex items-center justify-between border border-slate-700 rounded-lg px-5 py-4 group transition-all duration-200">
+            class="grad-edge flex items-center justify-between border border-[color:var(--border-solid)] rounded-lg px-5 py-4 group transition-all duration-200">
             <div>
-              <p class="text-sm font-medium text-white group-hover:text-blue-400 transition-colors">{link.label}</p>
-              <p class="mono text-xs text-slate-400 mt-0.5">{link.sub}</p>
+              <p class="text-sm font-semibold text-[color:var(--heading)] group-hover:text-[color:var(--link)] transition-colors">{link.label}</p>
+              <p class="text-xs text-[color:var(--text-muted)] mt-0.5">{link.sub}</p>
             </div>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-              class="text-slate-500 group-hover:text-blue-400 transition-colors"
+              class="text-[color:var(--text-faint)] group-hover:text-[color:var(--link)] transition-colors"
               stroke-linecap="round" stroke-linejoin="round">
               <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
               <polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/>
@@ -386,7 +379,7 @@ import { experiences, skills, links } from '../data/content';
   <!-- Footer -->
   <footer class="grad-top relative z-10 py-10 px-6 text-center">
     <a href="mailto:phaneendra@9thquadrant.com"
-      class="mono text-xs text-slate-400 hover:text-blue-400 transition-colors">
+      class="text-sm text-[color:var(--text-muted)] hover:text-[color:var(--link)] transition-colors">
       phaneendra@9thquadrant.com
     </a>
   </footer>
@@ -405,8 +398,8 @@ import { experiences, skills, links } from '../data/content';
     width: 44px;
     height: 44px;
     border-radius: 50%;
-    border: 1px solid rgb(51 65 85); /* slate-700 */
-    color: rgb(148 163 184); /* slate-400 */
+    border: 1px solid var(--border-solid);
+    color: var(--text-muted);
     transition: border-color 0.25s, color 0.25s, box-shadow 0.25s;
   }
 
@@ -430,7 +423,7 @@ import { experiences, skills, links } from '../data/content';
 
   .icon-link:hover {
     border-color: transparent;
-    color: #fff;
+    color: var(--heading);
     box-shadow: 0 0 22px -8px rgba(155, 114, 203, 0.9);
   }
 
@@ -438,95 +431,149 @@ import { experiences, skills, links } from '../data/content';
     opacity: 1;
   }
 
-  #mouse-glow-wrap {
-    position: fixed;
-    top: -280px;
-    left: 50%;
-    width: 640px;
-    height: 420px;
-    transform: translate(-50%, 0);
+  /* ---- Aurora --------------------------------------------------------
+     Full-width band at the top of the page. Each curtain is a soft
+     blurred blob in an aurora hue, drifting on its own slow loop and
+     blended additively (screen) in dark mode so overlaps brighten like
+     real aurora; in light mode it switches to multiply at low opacity so
+     it lands as a faint pastel wash instead of blowing out to white. */
+  #aurora-wrap {
+    /* absolute (not fixed) so the aurora belongs to the hero and scrolls
+       away with it, rather than tinting every section as you move down */
+    position: absolute;
+    top: -160px;
+    left: 0;
+    right: 0;
+    height: min(66vh, 600px);
     pointer-events: none;
     z-index: 1;
+    overflow: hidden;
     opacity: 1;
+    -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 28%, transparent 97%);
+            mask-image: linear-gradient(to bottom, #000 0%, #000 28%, transparent 97%);
   }
 
-  #mouse-glow {
+  #aurora {
     position: relative;
     width: 100%;
     height: 100%;
-    /* Position follows the cursor; scale gives it a brief "swell" on
-       movement, like a disturbed water surface — the elastic easing lets
-       it overshoot slightly and settle rather than snapping into place. */
-    transform: translate(var(--mx, 0px), var(--my, 0px)) scale(var(--s, 1));
-    transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+    /* gentle cursor parallax — the band as a whole eases opposite the pointer */
+    transform: translate3d(
+      calc(var(--mx, 0px) * -0.14),
+      calc(var(--my, 0px) * -0.09),
+      0
+    );
+    transition: transform 0.9s cubic-bezier(0.22, 1, 0.36, 1);
     will-change: transform;
   }
 
-  #mouse-glow-core {
+  .aurora-band {
     position: absolute;
-    /* larger than the wrapper so the rotating rectangle's corners never
-       sweep into view */
-    inset: -20%;
-    background: conic-gradient(from 0deg, #4285f4, #9b72cb, #d96570, #f9ab55, #4285f4);
-    /* static blur → the browser rasterizes the blurred blob once and then
-       just composites the rotation; screen blend makes it emit light
-       against the near-black page instead of sitting as a dark smear */
-    filter: blur(76px);
-    opacity: 0.6;
-    mix-blend-mode: screen;
+    top: -55%;
+    height: 170%;
+    border-radius: 45% 55% 62% 38%;
+    /* less blur than the travel distance, otherwise the drift is invisible */
+    filter: blur(46px) saturate(1.3);
+    mix-blend-mode: var(--aurora-blend);
+    opacity: var(--aurora-opacity);
     will-change: transform;
   }
-
-  @media (prefers-reduced-motion: no-preference) {
-    #mouse-glow-wrap {
-      opacity: 0;
-      animation: mouse-glow-enter 1s ease-out forwards;
-    }
-
-    #mouse-glow-core {
-      animation: mouse-glow-spin 44s linear infinite;
-    }
+  .aurora-band--1 {
+    left: -24%;
+    width: 58%;
+    background: radial-gradient(closest-side at 50% 45%, var(--aurora-1), transparent 100%);
+    animation: aurora-1 17s ease-in-out infinite alternate;
+  }
+  .aurora-band--2 {
+    left: 18%;
+    width: 62%;
+    background: radial-gradient(closest-side at 50% 55%, var(--aurora-2), transparent 100%);
+    animation: aurora-2 21s ease-in-out infinite alternate;
+  }
+  .aurora-band--3 {
+    left: 52%;
+    width: 60%;
+    background: radial-gradient(closest-side at 50% 42%, var(--aurora-3), transparent 100%);
+    animation: aurora-3 19s ease-in-out infinite alternate;
   }
 
-  @keyframes mouse-glow-enter {
-    from { opacity: 0; transform: translate(-50%, -120px); }
-    to   { opacity: 1; transform: translate(-50%, 0); }
+  /* big amplitude on purpose — the curtains sweep a long way and morph
+     shape so the movement reads clearly through the blur */
+  @keyframes aurora-1 {
+    from { transform: translate3d(-28%, -8%, 0) rotate(-18deg) scale(1, 1); }
+    to   { transform: translate3d(34%, 10%, 0) rotate(10deg) scale(0.82, 1.4); }
+  }
+  @keyframes aurora-2 {
+    from { transform: translate3d(26%, 6%, 0) rotate(14deg) scale(1.1, 1.2); }
+    to   { transform: translate3d(-30%, -6%, 0) rotate(-12deg) scale(0.85, 0.9); }
+  }
+  @keyframes aurora-3 {
+    from { transform: translate3d(16%, 0, 0) rotate(-8deg) scale(1, 1); }
+    to   { transform: translate3d(-34%, 12%, 0) rotate(16deg) scale(1.15, 1.35); }
   }
 
-  @keyframes mouse-glow-spin {
-    to { transform: rotate(360deg); }
+  /* entrance is only a `from` keyframe with no fill-mode, so the element
+     always settles back to its own opacity:1 once the 1.3s is up — it can
+     never get stuck hidden */
+  #aurora-wrap {
+    animation: aurora-enter 1.3s ease-out;
+  }
+  @keyframes aurora-enter {
+    from { opacity: 0; transform: translateY(-40px); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .aurora-band { animation: none; }
   }
 
-  /* Same idea as the ambient glow, applied to text: a gradient bigger than
-     the text itself, panned by the same --mx/--my the glow uses, so both
-     shift together with the cursor. Falls back to a static gradient with
-     no motion if reduced-motion is set (the --mx/--my custom properties
-     are simply never updated in that case). */
-  /* --- Gemini-inspired gradient system ---------------------------------
-     One 4-stop spectrum — Google blue → Gemini purple → coral → warm
-     amber — reused by every accent on the page (name text, ambient glow,
-     CTA, card edges) so the whole site reads as one palette rather than
-     a set of unrelated blue highlights. See
-     design.google/library/gemini-ai-visual-design. */
-  :root {
-    --g1: #4285f4; /* blue   */
-    --g2: #9b72cb; /* purple */
-    --g3: #d96570; /* coral  */
-    --g4: #f9ab55; /* amber  */
-    --grad-gemini: linear-gradient(115deg, var(--g1), var(--g2), var(--g3), var(--g4));
-  }
-
-  /* Static gradient text — for the small section eyebrows. (The hero name
-     uses .shine-text below, which additionally tracks the cursor.) */
-  .grad-label {
+  /* ---- section eyebrows --------------------------------------------- */
+  /* Hero eyebrow: gradient text with an ink halo so it survives sitting
+     directly under the aurora. */
+  .hero-eyebrow {
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0.26em;
+    text-transform: uppercase;
+    margin-bottom: 1.5rem;
     background-image: var(--grad-gemini);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
-    /* dark halo so the gradient stays legible where it sits directly over
-       the ambient glow (which is painted from the same four colours) */
-    filter: drop-shadow(0 0 12px rgba(2, 4, 9, 0.95))
-            drop-shadow(0 0 4px rgba(2, 4, 9, 1));
+    filter: drop-shadow(0 0 10px var(--shadow-ink))
+            drop-shadow(0 0 3px var(--shadow-ink));
+  }
+
+  /* Section headings ("Experience", "Skills", "Around the web"):
+     solid high-contrast colour + a short gradient bar for palette
+     cohesion. Much more legible than the old faint gradient-on-glow. */
+  .section-label {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 0.82rem;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--label);
+    margin-bottom: 3.5rem;
+  }
+  .section-label::before {
+    content: "";
+    flex: none;
+    width: 1.75rem;
+    height: 3px;
+    border-radius: 3px;
+    background: var(--grad-gemini);
+  }
+
+  /* Skill-card headings — near heading-level contrast so each group name
+     reads at a glance. */
+  .skill-card-title {
+    font-size: 0.82rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--heading);
+    margin-bottom: 0.85rem;
   }
 
   /* Reusable gradient outline that fades in on hover, for bordered cards.
@@ -534,6 +581,9 @@ import { experiences, skills, links } from '../data/content';
      card's own content shows through untouched. */
   .grad-edge {
     position: relative;
+    background: var(--surface);
+    box-shadow: var(--card-shadow);
+    transition: background 0.25s ease, box-shadow 0.35s ease;
   }
   .grad-edge::before {
     content: "";
@@ -554,7 +604,8 @@ import { experiences, skills, links } from '../data/content';
     opacity: 1;
   }
   .grad-edge:hover {
-    box-shadow: 0 0 34px -14px rgba(155, 114, 203, 0.85);
+    background: var(--surface-hover);
+    box-shadow: 0 0 34px -14px rgba(155, 114, 203, 0.55);
   }
 
   /* Gradient left-rail for the experience entries — the flat slate border
@@ -693,21 +744,25 @@ import { experiences, skills, links } from '../data/content';
   }
 
   .shine-text {
-    /* Linear, not conic like #mouse-glow above — a conic gradient has a
-       center vertex where all its color bands converge, which showed up
-       as a visible seam in the text no matter how it was positioned.
-       A linear gradient is just a smooth directional blend with no such
-       point, so there's nothing to hide — same 4 colors, no artifact. */
-    background-image: linear-gradient(115deg, #4285f4 0%, #9b72cb 38%, #d96570 70%, #f9ab55 100%);
+    /* Linear (not conic): a conic gradient has a centre vertex where the
+       bands converge, which shows as a seam in the text. The stops are
+       theme tokens — darker / more saturated in light mode so the name
+       keeps its punch on the off-white ground. */
+    background-image: linear-gradient(
+      115deg,
+      var(--shine-1) 0%,
+      var(--shine-2) 38%,
+      var(--shine-3) 70%,
+      var(--shine-4) 100%
+    );
     background-size: 200% 200%;
     background-position: calc(50% + var(--mx, 0px)) calc(50% + var(--my, 0px));
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
-    /* keeps the name readable when the ambient glow drifts behind it —
-       same colours, so without this the letters can vanish into it */
-    filter: drop-shadow(0 0 16px rgba(2, 4, 9, 0.9))
-            drop-shadow(0 2px 3px rgba(2, 4, 9, 0.85));
+    /* halo so the name stays readable where the aurora drifts behind it */
+    filter: drop-shadow(0 0 16px var(--shadow-ink))
+            drop-shadow(0 2px 3px var(--shadow-ink));
     transition: background-position 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
   }
 </style>
