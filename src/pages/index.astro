@@ -1,19 +1,42 @@
 ---
 import Base from '../layouts/Base.astro';
 import Stars from '../components/Stars.astro';
-import { experiences, skills, links } from '../data/content';
+import { experiences, skills, links, caseStudies } from '../data/content';
 
-// Rotating hero subheadline. Order is deliberate: React leads (the site is
-// positioned for React/TypeScript/Next.js roles), Angular depth shows up
-// third — real and detailed in Experience, just not the first thing a
-// visitor reads. Line 1 doubles as the static, server-rendered fallback
-// (no-JS and reduced-motion both land here) — see the .sr-only paragraph
-// and the rotator script further down.
-const rotatingLines = [
-  'React across the full lifecycle: greenfield PWAs, legacy modernization, and framework migrations.',
-  'Cut FCP from 2s to 0.2s. Cut build times from 20 minutes to 90 seconds.',
-  'Led a 500-component Angular migration with a 15-engineer team, end to end.',
-  'Shipped in regulated environments only: healthcare, HR tech, and enterprise SaaS.',
+// Static lead-in + a rotating tail — "I build frontend systems that
+// [scale to support 15+ engineers / turn 20-minute builds into 1.5-minute
+// ones / …]". Line 1 doubles as the server-rendered, no-JS/reduced-motion
+// fallback — see the .sr-only paragraph and the rotator script below.
+const heroTaglineIntro = 'I build frontend systems that';
+const heroEndings = [
+  'scale to support 15+ engineers.',
+  'turn 20-minute builds into 1.5-minute ones.',
+  'reduce FCP from 2s to 0.2s.',
+  'migrate 500+ components.',
+  'simplify complex data-heavy workflows.',
+  'modernize legacy frontend architecture.',
+];
+
+const helpItems = [
+  {
+    label: 'Frontend architecture',
+    iconInner:
+      '<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/>',
+  },
+  {
+    label: 'Complex product interfaces',
+    iconInner:
+      '<rect x="3" y="4" width="18" height="16" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="9" x2="9" y2="20"/>',
+  },
+  {
+    label: 'Performance & scalability',
+    iconInner: '<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>',
+  },
+  {
+    label: 'Technical leadership',
+    iconInner:
+      '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
+  },
 ];
 ---
 
@@ -61,20 +84,41 @@ const rotatingLines = [
 
   <!-- Hero -->
   <section id="top" class="relative z-10 min-h-screen flex flex-col items-center justify-center px-6 pt-20 pb-28 text-center">
-    <p id="hero-eyebrow" class="hero-eyebrow animate-fade-up-delay-1">
-      Senior Frontend Engineer
-    </p>
+    <!-- Personalized greeting — only populated (and only takes up space)
+         when the visitor arrived via a ?fn= cold-email link. -->
+    <p id="hero-greeting" class="hero-greeting animate-fade-up-delay-1" hidden></p>
 
+    <!-- Default hero identity: the name never changes, so it's never
+         hidden for non-personalized visitors. For a cold-email visit
+         (.is-cold-email, set on <html> before first paint) these two are
+         replaced by #hero-identity/#hero-context below instead — CSS
+         hides them synchronously pre-paint, so there's no flash. -->
     <div id="hero-headline">
       <h1 class="text-6xl md:text-8xl font-black leading-none tracking-tight mb-2 animate-fade-up-delay-2 text-[color:var(--heading)]">
         Phaneendra
       </h1>
-      <h1 class="text-6xl md:text-8xl font-black leading-none tracking-tight mb-7 animate-fade-up-delay-2">
+      <h1 class="text-6xl md:text-8xl font-black leading-none tracking-tight mb-3 animate-fade-up-delay-2">
         <span class="shine-text">
           Kanduri
         </span>
       </h1>
     </div>
+
+    <p id="hero-role" class="hero-role animate-fade-up-delay-2">
+      Senior Frontend Engineer
+    </p>
+
+    <!-- Cold-email-only identity + context lines, in place of the name/role
+         above. #hero-identity is fully static (no query-param content), so
+         it ships in the server-rendered HTML and is revealed purely by the
+         .is-cold-email CSS rule — no JS required, no risk of flashing
+         unpersonalized content. #hero-context needs ?co=, so it starts
+         hidden and is filled in + revealed by the script below, same
+         pattern #hero-greeting already used. -->
+    <p id="hero-identity" class="hero-identity animate-fade-up-delay-2">
+      I'm <span class="font-semibold shine-text">Phaneendra Kanduri</span>, a Senior Frontend Engineer at IBM.
+    </p>
+    <p id="hero-context" class="hero-context animate-fade-up-delay-2" hidden></p>
 
     <script is:inline>
       // Cold-email personalization + Cal.com prompt, driven entirely by
@@ -91,20 +135,6 @@ const rotatingLines = [
         var CAL_URL = 'https://cal.com/' + CAL_LINK;
         var calInitialized = false;
         var embedLoaded = false;
-
-        // The <head> script adds .is-cold-email before first paint, which
-        // hides #hero-eyebrow / #hero-headline so the personalized copy can
-        // be written in without a visible swap. revealHero() undoes that,
-        // and is wired to run up front, on DOMContentLoaded, and on a timer
-        // so the hero can never stay hidden even if the code below throws.
-        function revealHero() {
-          ['hero-eyebrow', 'hero-headline'].forEach(function (id) {
-            var el = document.getElementById(id);
-            if (el) el.style.visibility = 'visible';
-          });
-        }
-        window.addEventListener('DOMContentLoaded', revealHero);
-        setTimeout(revealHero, 2000);
 
         // Official Cal.com embed loader (https://cal.com/docs/embed).
         // Idempotent: safe to call more than once, only injects embed.js once.
@@ -181,10 +211,12 @@ const rotatingLines = [
         }
 
         // --- persistent manual CTA: the ONLY way the Cal.com popup opens.
-        // Works for any visitor, any time. When ?e= is present its value is
-        // used to prefill the booking form (see openCalPopup), but the
-        // popup never opens on its own — the visitor must click "Book a call".
-        // Delegated on document since #book-call-btn is parsed after this
+        // Works for any visitor, any time, on any button carrying the
+        // .cal-trigger class (there are two: the hero CTA and the closing
+        // CTA). When ?e= is present its value is used to prefill the
+        // booking form (see openCalPopup), but the popup never opens on
+        // its own — the visitor must click one of these buttons.
+        // Delegated on document since the buttons are parsed after this
         // script runs — a direct getElementById here would find nothing.
         // Modifier / non-primary clicks fall through to the link so
         // "open in new tab" keeps working.
@@ -192,77 +224,61 @@ const rotatingLines = [
           if (e.defaultPrevented) return;
           if (e.button && e.button !== 0) return;
           if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
-          if (e.target.closest && e.target.closest('#book-call-btn')) {
+          if (e.target.closest && e.target.closest('.cal-trigger')) {
             handleBookClick(e);
           }
         });
 
-        if (utmMedium !== 'email') {
-          revealHero();
-          return;
-        }
+        if (utmMedium !== 'email') return;
 
-        // --- eyebrow label: swap "Senior Frontend Engineer" for the company ---
-        if (co) {
-          var eyebrow = document.getElementById('hero-eyebrow');
-          if (eyebrow) eyebrow.textContent = co;
-        }
-
-        // --- Task 2: personalize the hero headline ---
-        // Only the visitor's name gets the shine-text treatment; the rest
-        // of the sentence stays plain, inheriting the page's normal text
-        // color, so the name is the one thing that pops.
+        // --- greeting: "Hi {fn}, thanks for taking a look." ---
+        // Built with createElement/createTextNode (not innerHTML) since
+        // `fn` comes straight from the URL and is untrusted input.
         if (fn) {
-          var headline = document.getElementById('hero-headline');
-          if (headline) {
-            headline.innerHTML = '';
-            var h1 = document.createElement('h1');
-            h1.className =
-              'text-4xl md:text-6xl font-black leading-tight tracking-tight mb-3 animate-fade-up-delay-2';
-            h1.appendChild(document.createTextNode('Hi '));
+          var greeting = document.getElementById('hero-greeting');
+          if (greeting) {
+            greeting.textContent = 'Hi ';
             var span = document.createElement('span');
-            span.className = 'shine-text';
+            span.className = 'font-semibold shine-text';
             span.textContent = fn;
-            h1.appendChild(span);
-            h1.appendChild(document.createTextNode('. Got 15 minutes?'));
-            headline.appendChild(h1);
-
-            // The headline no longer says who this site belongs to once it
-            // greets the visitor by name — reintroduce it as a small line,
-            // with my name weighted so it doesn't disappear into the rest.
-            var intro = document.createElement('p');
-            intro.className = 'text-base md:text-lg text-[color:var(--text-muted)] mb-4 animate-fade-up-delay-3';
-            intro.innerHTML =
-              "I'm <span class=\"font-semibold shine-text\">Phaneendra Kanduri</span>, frontend engineer at Confluent (an IBM company).";
-            headline.insertAdjacentElement('afterend', intro);
+            greeting.appendChild(span);
+            greeting.appendChild(document.createTextNode(', thanks for taking a look.'));
+            greeting.hidden = false;
           }
         }
 
-        // Personalized copy is in place (or there was nothing to change) —
-        // now it's safe to reveal the hero. The Cal.com popup is no longer
-        // auto-opened for ?e= links; it opens only on a "Book a call" click,
-        // with the ?e= value prefilled into the form at that point.
-        revealHero();
+        // --- context line: "I put this page together with {co} in mind."
+        // Only shown when ?co= is present — same untrusted-input handling
+        // as the greeting above (textContent, not innerHTML).
+        if (co) {
+          var context = document.getElementById('hero-context');
+          if (context) {
+            context.textContent = 'I put this page together with ' + co + ' in mind.';
+            context.hidden = false;
+          }
+        }
       })();
     </script>
 
-    <!-- Rotating value-prop line. aria-hidden because the four lines cycle —
-         re-announcing that to screen readers every 3.5s would be worse than
-         static text. Line 1's content is repeated once, non-rotating, in
-         the .sr-only paragraph right after. Line 1 also ships active in the
-         server-rendered HTML, so it's what shows with JS disabled or under
-         prefers-reduced-motion (the rotator script never starts a timer in
-         that case — see the script below). -->
-    <div id="hero-rotator" class="hero-rotator mb-7 animate-fade-up-delay-3" aria-hidden="true">
-      {rotatingLines.map((line, i) => (
-        <p class={`hero-rotator__line${i === 0 ? ' is-active' : ''}`}>
-          <span class="hero-rotator__quote">{line}</span>
-        </p>
-      ))}
-    </div>
-    <p class="sr-only">{rotatingLines[0]}</p>
+    <!-- Single-line tagline: static lead-in, then the rotating tail end
+         inline right after it. The rotator is aria-hidden because the
+         lines cycle — re-announcing that to screen readers every 3.5s
+         would be worse than static text. Line 1's content is repeated
+         once, non-rotating, in the .sr-only paragraph right after, and it
+         also ships .is-active in the server-rendered HTML, so it's what
+         shows with JS disabled or under prefers-reduced-motion (the
+         rotator script never starts a timer in that case). -->
+    <p class="hero-tagline animate-fade-up-delay-3">
+      <span class="hero-tagline__intro">{heroTaglineIntro}</span>
+      <span id="hero-rotator" class="hero-rotator" aria-hidden="true">
+        {heroEndings.map((line, i) => (
+          <span class={`hero-rotator__line${i === 0 ? ' is-active' : ''}`}>{line}</span>
+        ))}
+      </span>
+    </p>
+    <p class="sr-only">{heroTaglineIntro} {heroEndings[0]}</p>
 
-    <div class="hero-metrics mb-8 animate-fade-up-delay-3" aria-label="Performance metrics">
+    <div class="hero-metrics animate-fade-up-delay-3" aria-label="Performance metrics">
       <span class="hero-metric">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
         <span class="mono">2s → 0.2s FCP</span>
@@ -283,7 +299,7 @@ const rotatingLines = [
          each fact gets its own bounded shape and a small icon, so this
          block reads as distinct pieces of information instead of one long
          run-on line. -->
-    <div class="hero-chips mb-3 animate-fade-up-delay-3" aria-label="Industries">
+    <div class="hero-chips animate-fade-up-delay-3" aria-label="Industries">
       <span class="hero-chip">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></svg>
         Enterprise SaaS
@@ -298,7 +314,7 @@ const rotatingLines = [
       </span>
     </div>
 
-    <div class="hero-chips mb-9 animate-fade-up-delay-3" aria-label="Availability">
+    <div class="hero-chips animate-fade-up-delay-3" aria-label="Availability">
       <span class="hero-chip">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
         Willing to relocate
@@ -313,7 +329,17 @@ const rotatingLines = [
       </span>
     </div>
 
-    <div class="flex flex-wrap items-center justify-center gap-3 mb-7">
+    <div class="hero-cta-row flex flex-wrap items-center justify-center gap-3">
+      <a
+        id="book-call-btn"
+        href="https://cal.com/phaneendra-kanduri/30min"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="cal-trigger shiny-cta inline-flex items-center gap-2 text-sm font-semibold tracking-wide px-7 py-3.5 rounded-full border text-[color:var(--heading)] transition-colors"
+      >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="flex-none"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        BOOK A 15-MIN CONVERSATION →
+      </a>
       <a
         id="resume-btn"
         href="/resume/Phaneendra_Kanduri_Resume.pdf"
@@ -322,17 +348,7 @@ const rotatingLines = [
         class="btn-outline inline-flex items-center gap-2 text-sm font-semibold tracking-wide px-7 py-3.5 rounded-full border transition-colors"
       >
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="flex-none"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-        View Résumé
-      </a>
-      <a
-        id="book-call-btn"
-        href="https://cal.com/phaneendra-kanduri/30min"
-        target="_blank"
-        rel="noopener noreferrer"
-        class="shiny-cta inline-flex items-center gap-2 text-sm font-semibold tracking-wide px-7 py-3.5 rounded-full border text-[color:var(--heading)] transition-colors"
-      >
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="flex-none"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-        Got 15 minutes? →
+        Download Résumé
       </a>
     </div>
 
@@ -379,6 +395,51 @@ const rotatingLines = [
     </a>
   </section>
   <script is:inline>
+    // Hero rotator: cycles the six sentence endings every 2s, steadily,
+    // for as long as the page is open. Respects prefers-reduced-motion by
+    // never starting a timer at all — line 1 (already active in the
+    // server-rendered HTML) just stays put. (Earlier versions paused on
+    // hover/focus of #top, but #top is the whole hero — min-h-screen — so
+    // the timer stopped the instant the cursor entered the page at all,
+    // which read as broken/stuck rather than as a deliberate pause. Not
+    // worth reintroducing without a much narrower hover target.)
+    (function () {
+      var root = document.getElementById('hero-rotator');
+      if (!root) return;
+      var lines = root.querySelectorAll('.hero-rotator__line');
+      if (lines.length < 2) return;
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+      var idx = 0;
+      var timer = null;
+
+      function show(next) {
+        // Odometer-style swap: the outgoing line keeps travelling upward
+        // (is-leaving) while the incoming one rises from below into the
+        // active slot — both moving the same direction, like a rolling
+        // counter. Once the outgoing line's transition is done it's reset
+        // to its resting position (below, no transition) so it's ready to
+        // rise in again on its next turn.
+        var outgoing = lines[idx];
+        outgoing.classList.remove('is-active');
+        outgoing.classList.add('is-leaving');
+        window.setTimeout(function () {
+          outgoing.classList.remove('is-leaving');
+          outgoing.style.transition = 'none';
+          void outgoing.offsetWidth; // force reflow before re-enabling the transition
+          outgoing.style.transition = '';
+        }, 520);
+
+        idx = next;
+        lines[idx].classList.add('is-active');
+      }
+      function tick() {
+        show((idx + 1) % lines.length);
+      }
+      timer = setInterval(tick, 2000);
+    })();
+  </script>
+  <script is:inline>
     // GA4 doesn't reliably auto-track outbound file downloads unless
     // "File downloads" is switched on under Enhanced measurement in the
     // GA4 property admin — and even then it's a heuristic, not guaranteed.
@@ -418,65 +479,73 @@ const rotatingLines = [
       );
     })();
   </script>
-  <script is:inline>
-    // Hero rotator: cycles the four value-prop lines every 3.5s.
-    // Respects prefers-reduced-motion by never starting a timer at all —
-    // line 1 (already active in the server-rendered HTML) just stays put.
-    // Pauses on hover/focus of the hero (#top) and resumes on leave/blur.
-    (function () {
-      var root = document.getElementById('hero-rotator');
-      if (!root) return;
-      var lines = root.querySelectorAll('.hero-rotator__line');
-      if (lines.length < 2) return;
-      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
-      var idx = 0;
-      var timer = null;
+  <!-- What I Can Help With -->
+  <section id="help" class="relative z-10 py-20 px-6">
+    <div class="max-w-3xl mx-auto">
+      <p class="section-label">What I Can Help With</p>
+      <div class="help-grid">
+        {helpItems.map((item) => (
+          <div class="help-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" set:html={item.iconInner} />
+            <span>{item.label}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
 
-      function show(next) {
-        // Odometer-style swap: the outgoing line keeps travelling upward
-        // (is-leaving) while the incoming one rises from below into the
-        // active slot — both moving the same direction, like a rolling
-        // counter. Once the outgoing line's transition is done it's reset
-        // to its resting position (below, no transition) so it's ready to
-        // rise in again on its next turn.
-        var outgoing = lines[idx];
-        outgoing.classList.remove('is-active');
-        outgoing.classList.add('is-leaving');
-        window.setTimeout(function () {
-          outgoing.classList.remove('is-leaving');
-          outgoing.style.transition = 'none';
-          void outgoing.offsetWidth; // force reflow before re-enabling the transition
-          outgoing.style.transition = '';
-        }, 520);
+  <!-- Selected Engineering Impact — same three stats the case studies
+       below go into more depth on, surfaced here as a quick-scan strip. -->
+  <section id="impact" class="relative z-10 py-20 px-6">
+    <div class="max-w-3xl mx-auto">
+      <p class="section-label">Selected Engineering Impact</p>
+      <div class="impact-grid">
+        {caseStudies.map((cs) => (
+          <div class="impact-stat">
+            <p class="impact-stat__number">{cs.stat}</p>
+            <p class="impact-stat__label">{cs.statLabel}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
 
-        idx = next;
-        lines[idx].classList.add('is-active');
-      }
-      function tick() {
-        show((idx + 1) % lines.length);
-      }
-      function start() {
-        if (!timer) timer = setInterval(tick, 3500);
-      }
-      function stop() {
-        if (timer) {
-          clearInterval(timer);
-          timer = null;
-        }
-      }
-
-      start();
-
-      var hero = document.getElementById('top');
-      if (hero) {
-        hero.addEventListener('mouseenter', stop);
-        hero.addEventListener('mouseleave', start);
-        hero.addEventListener('focusin', stop);
-        hero.addEventListener('focusout', start);
-      }
-    })();
-  </script>
+  <!-- Case Studies — the same roles from Experience below, reframed as a
+       problem/decisions/implementation/result narrative instead of a
+       bullet list. -->
+  <section id="case-studies" class="relative z-10 py-20 px-6">
+    <div class="max-w-3xl mx-auto">
+      <p class="section-label">Case Studies</p>
+      <p class="case-flow mono">Problem &nbsp;→&nbsp; Decisions &nbsp;→&nbsp; Implementation &nbsp;→&nbsp; Result</p>
+      <div class="case-study-list">
+        {caseStudies.map((cs) => (
+          <article class="case-study">
+            <p class="case-study__company">{cs.company}</p>
+            <h3 class="case-study__title">{cs.title}</h3>
+            <div class="case-study__steps">
+              <div class="case-study__step">
+                <p class="case-study__step-label">Problem</p>
+                <p class="case-study__step-body">{cs.problem}</p>
+              </div>
+              <div class="case-study__step">
+                <p class="case-study__step-label">Decisions</p>
+                <p class="case-study__step-body">{cs.decisions}</p>
+              </div>
+              <div class="case-study__step">
+                <p class="case-study__step-label">Implementation</p>
+                <p class="case-study__step-body">{cs.implementation}</p>
+              </div>
+              <div class="case-study__step case-study__step--result">
+                <p class="case-study__step-label">Result</p>
+                <p class="case-study__step-body">{cs.result}</p>
+              </div>
+            </div>
+          </article>
+        ))}
+      </div>
+    </div>
+  </section>
 
   <!-- Experience -->
   <section id="experience" class="relative z-10 py-24 px-6">
@@ -551,6 +620,20 @@ const rotatingLines = [
         ))}
       </div>
     </div>
+  </section>
+
+  <!-- Closing CTA -->
+  <section class="relative z-10 py-24 px-6 text-center">
+    <p class="closing-cta__question">Have an interesting frontend problem?</p>
+    <a
+      href="https://cal.com/phaneendra-kanduri/30min"
+      target="_blank"
+      rel="noopener noreferrer"
+      class="cal-trigger shiny-cta inline-flex items-center gap-2 text-sm font-semibold tracking-wide px-7 py-3.5 rounded-full border text-[color:var(--heading)] transition-colors"
+    >
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="flex-none"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      BOOK A CONVERSATION →
+    </a>
   </section>
 
   <!-- Footer -->
@@ -702,104 +785,19 @@ const rotatingLines = [
     .aurora-band { animation: none; }
   }
 
-  /* ---- hero rotator --------------------------------------------------
-     Fixed-height stage so the four lines crossfade in place with zero
-     layout shift. Every line is absolutely positioned inside the stage
-     (so only min-height, not content, drives the box's size); the
-     .is-active one gets opacity:1. Line 1 ships .is-active from the
-     server, which is also what prefers-reduced-motion and no-JS visitors
-     see, permanently. */
-  .hero-rotator {
-    position: relative;
-    /* explicit width: every line inside is absolutely positioned (so they
-       can crossfade in place), which means the rotator has no in-flow
-       content to size itself from — without this it collapses to zero
-       width in the hero's centered flex column. */
-    width: 100%;
-    max-width: 42rem;
-    margin: 0 auto;
-    /* dedicated, fixed stage height (not responsive) — every line, at any
-       viewport width, crossfades/slides within this box with zero shift */
-    min-height: 150px;
-    /* clips the odometer slide — lines travel past the box edge on their
-       way in/out rather than spilling into neighbouring content */
-    overflow: hidden;
-  }
-  /* Odometer-style rotation: the active line sits at rest; the next line
-     rises up from below to replace it, while the outgoing line keeps
-     travelling up and out — same direction throughout, like a rolling
-     counter, rather than a plain crossfade. .is-leaving is added/removed
-     by the rotator script (see the inline script after this section) once
-     each swap's transition finishes, so an outgoing line is always reset
-     below (its default rest position) before its next turn. */
-  .hero-rotator__line {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    font-family: 'DM Mono', 'JetBrains Mono', 'Cascadia Code', monospace;
-    font-style: italic;
-    font-weight: 700;
-    font-size: 1.125rem;
-    line-height: 1.625;
-    color: var(--text);
-    opacity: 0;
-    transform: translateY(65%);
-    transition: transform 0.5s cubic-bezier(0.65, 0, 0.35, 1), opacity 0.35s ease;
-    pointer-events: none;
-  }
-  @media (min-width: 768px) {
-    .hero-rotator__line {
-      font-size: 1.25rem;
-    }
-  }
-  /* Real curly quote marks flanking the line, sized up and lightly
-     tinted so they read as a proper pull-quote rather than plain punctuation.
-     Part of the inline text (not separate flex items), so they wrap and
-     stay glued to the sentence exactly like typography would. */
-  .hero-rotator__quote::before,
-  .hero-rotator__quote::after {
-    font-family: Georgia, 'Times New Roman', serif;
-    font-style: normal;
-    font-weight: 700;
-    font-size: 1.3em;
-    color: var(--link);
-    opacity: 0.65;
-    vertical-align: -0.08em;
-  }
-  .hero-rotator__quote::before {
-    content: '\201C';
-    margin-right: 0.15em;
-  }
-  .hero-rotator__quote::after {
-    content: '\201D';
-    margin-left: 0.15em;
-  }
-  .hero-rotator__line.is-active {
-    opacity: 1;
-    transform: translateY(0);
-  }
-  .hero-rotator__line.is-leaving {
-    opacity: 0;
-    transform: translateY(-65%);
-  }
-  @media (prefers-reduced-motion: reduce) {
-    .hero-rotator__line {
-      transition: none;
-    }
-  }
-
   /* ---- hero metrics ----------------------------------------------------
      Each stat gets its own small icon (lightning/wrench/clock) so the row
-     reads as three distinct proof points instead of one dense mono string. */
+     reads as three distinct proof points instead of one dense mono string.
+     First element of the third visual group (metrics/chips/CTAs/social):
+     the 2.5rem gap up to the tagline block lives here — see the spacing
+     model note above .hero-greeting. */
   .hero-metrics {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
     justify-content: center;
     gap: 0.65rem;
+    margin: 2.5rem 0 0;
     font-weight: 400;
     color: var(--heading);
   }
@@ -828,13 +826,16 @@ const rotatingLines = [
   /* ---- hero chips ------------------------------------------------------
      Industries + availability as individual pill shapes with a small icon
      each, instead of one long dot-separated line — breaks the hero's lower
-     half into distinct, scannable pieces instead of a wall of text. */
+     half into distinct, scannable pieces instead of a wall of text. Tight
+     margin-top ties both chip rows to the metrics row above them, so the
+     whole metrics/chips/CTA/social stretch reads as one block. */
   .hero-chips {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
     justify-content: center;
     gap: 0.55rem;
+    margin: 0.75rem 0 0;
   }
   .hero-chip {
     display: inline-flex;
@@ -854,6 +855,149 @@ const rotatingLines = [
     width: 14px;
     height: 14px;
     color: var(--link);
+  }
+
+  /* ---- "What I Can Help With" ------------------------------------------ */
+  .help-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1rem;
+  }
+  .help-item {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    padding: 1.1rem 1.25rem;
+    border-radius: 0.75rem;
+    border: 1px solid var(--border-solid);
+    background: var(--surface);
+    color: var(--heading);
+    font-weight: 600;
+    font-size: 0.95rem;
+    transition: background 0.25s ease, border-color 0.25s ease, transform 0.25s ease;
+  }
+  .help-item:hover {
+    background: var(--surface-hover);
+    border-color: var(--link);
+    transform: translateY(-2px);
+  }
+  .help-item svg {
+    flex: none;
+    width: 22px;
+    height: 22px;
+    color: var(--link);
+  }
+
+  /* ---- "Selected Engineering Impact" ------------------------------------ */
+  .impact-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 2rem;
+    text-align: center;
+  }
+  .impact-stat__number {
+    font-family: 'JetBrains Mono', 'Cascadia Code', 'Consolas', monospace;
+    font-size: 1.75rem;
+    font-weight: 800;
+    line-height: 1.1;
+    white-space: nowrap;
+    background-image: var(--grad-gemini);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  @media (min-width: 768px) {
+    .impact-stat__number {
+      font-size: 2rem;
+    }
+  }
+  .impact-stat__label {
+    margin-top: 0.5rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  /* ---- "Case Studies" ---------------------------------------------------
+     Same three roles as Experience, reframed as problem/decisions/
+     implementation/result. Built directly from the achievement bullets in
+     data/content.ts — nothing invented, just restructured. */
+  .case-flow {
+    font-size: 0.78rem;
+    color: var(--text-faint);
+    margin-bottom: 3rem;
+    margin-top: -2.5rem;
+  }
+  .case-study-list {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+  }
+  .case-study {
+    border: 1px solid var(--border-solid);
+    background: var(--surface);
+    border-radius: 1rem;
+    padding: 1.75rem;
+    box-shadow: var(--card-shadow);
+  }
+  .case-study__company {
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--link);
+    margin-bottom: 0.4rem;
+  }
+  .case-study__title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--heading);
+    margin-bottom: 1.4rem;
+  }
+  .case-study__steps {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.5rem;
+  }
+  @media (max-width: 800px) {
+    .case-study__steps {
+      grid-template-columns: 1fr;
+      gap: 1.1rem;
+    }
+  }
+  .case-study__step-label {
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+    margin-bottom: 0.4rem;
+  }
+  .case-study__step--result .case-study__step-label {
+    color: var(--link);
+  }
+  .case-study__step-body {
+    font-size: 0.85rem;
+    line-height: 1.55;
+    color: var(--text-secondary);
+  }
+
+  /* ---- closing CTA ------------------------------------------------------ */
+  .closing-cta__question {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--heading);
+    margin-bottom: 1.5rem;
+  }
+
+  /* Slightly more room than the chip rows get, since buttons carry more
+     visual weight — still well under the 2.5rem inter-block gap, so it
+     reads as the same block as the metrics/chips above and the social
+     row below, not a break. */
+  .hero-cta-row {
+    margin-top: 1.25rem;
   }
 
   /* ---- secondary CTA (outline) — sits next to .shiny-cta, deliberately
@@ -878,7 +1022,11 @@ const rotatingLines = [
 
   /* ---- social row — smaller than the header icon row (still secondary
      to the CTAs above), but with a real fill and solid contrast so they
-     don't read as barely-there ghosts. */
+     don't read as barely-there ghosts. Tight margin-top: last element of
+     the metrics/chips/CTA/social block. */
+  .social-row {
+    margin-top: 0.9rem;
+  }
   .social-row .icon-link {
     width: 36px;
     height: 36px;
@@ -889,21 +1037,185 @@ const rotatingLines = [
     background: var(--surface-hover);
   }
 
-  /* ---- section eyebrows --------------------------------------------- */
-  /* Hero eyebrow: gradient text with an ink halo so it survives sitting
-     directly under the aurora. */
-  .hero-eyebrow {
+  /* ---- hero identity block ------------------------------------------
+     Order is: optional personalized greeting → name (never changes) →
+     role/title (gradient, same treatment the old eyebrow used, just
+     repositioned below the name) → static tagline.
+
+     Spacing model, top-down: every element below carries its OWN gap from
+     whatever precedes it as margin-top, and margin-bottom: 0 — never both.
+     That makes each gap a single number to tune, and (thanks to margin
+     collapsing) the personalized path (greeting → identity → context) and
+     the default path (headline → role) both hand off to the tagline with
+     the exact same gap, however much text the personalized side has.
+     Three visual groups, three gap sizes:
+       - within the 3-line personalized block: 0.4rem (reads as one block)
+       - block → block (personalization/name, tagline, metrics+chips+CTAs):
+         2.5rem (a real break)
+       - within the metrics/chips/CTA/social block: 0.75–1.25rem (see
+         .hero-metrics/.hero-chips/.hero-cta-row/.social-row below) */
+  /* Cold-email-only greeting — "Hi {fn}, thanks for taking a look."
+     Largest of the three personalized lines, close to the scale of the
+     default hero's own name headline so it carries the same weight as
+     the thing it's replacing. */
+  .hero-greeting {
+    font-size: 2rem;
+    font-weight: 700;
+    line-height: 1.15;
+    color: var(--heading);
+    margin-bottom: 0;
+  }
+  @media (min-width: 768px) {
+    .hero-greeting {
+      font-size: 3.125rem;
+    }
+  }
+
+  /* Cold-email-only identity line — "I'm Phaneendra Kanduri, a Senior
+     Frontend Engineer at IBM." Static (see #hero-identity in the markup):
+     revealed by the .is-cold-email CSS rule in Base.astro, no JS needed. */
+  .hero-identity {
+    max-width: 42rem;
+    margin: 0.4rem auto 0;
+    font-size: 1.375rem;
+    font-weight: 500;
+    line-height: 1.4;
+    color: var(--text);
+  }
+  @media (min-width: 768px) {
+    .hero-identity {
+      font-size: 1.875rem;
+    }
+  }
+
+  /* Cold-email-only context line — "I put this page together with {co} in
+     mind." Only shown when ?co= is present; same size as the regular
+     tagline since it reads as ordinary body copy, not a headline. */
+  .hero-context {
+    max-width: 42rem;
+    margin: 0.4rem auto 0;
+    font-size: 1.125rem;
+    font-style: italic;
+    line-height: 1.625;
+    color: var(--text-muted);
+  }
+  @media (min-width: 768px) {
+    .hero-context {
+      font-size: 1.25rem;
+    }
+  }
+
+  .hero-role {
     font-size: 0.8rem;
     font-weight: 600;
     letter-spacing: 0.26em;
     text-transform: uppercase;
-    margin-bottom: 1.5rem;
+    margin-bottom: 0;
     background-image: var(--grad-gemini);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
     filter: drop-shadow(0 0 10px var(--shadow-ink))
             drop-shadow(0 0 3px var(--shadow-ink));
+  }
+
+  /* Its own block: a full 2.5rem gap above (from the name/role or the
+     personalized greeting, whichever ran), and nothing tying it to the
+     metrics/chips/CTA block below — that gap belongs to that block's own
+     first element (.hero-metrics), for the same margin-collapsing reason.
+
+     max-width is wider than the other hero copy (58rem, not 42rem):
+     DM Mono is a monospace face, so it runs noticeably wider per
+     character than the proportional body font used elsewhere — at 42rem
+     the longest intro+ending combination didn't fit and wrapped even on
+     a plenty-wide desktop viewport, which is the box's own cap biting,
+     not the real viewport running out of room. 58rem gives it enough
+     width to actually use the space that's there. */
+  .hero-tagline {
+    max-width: 58rem;
+    margin: 2.5rem auto 0;
+    font-size: 1.125rem;
+    line-height: 1.625;
+    color: var(--text);
+  }
+  @media (min-width: 768px) {
+    .hero-tagline {
+      font-size: 1.25rem;
+    }
+  }
+  /* Tagline reads as one flowing line: static lead-in text, then the
+     rotator immediately after it, wrapping together like normal text only
+     if the viewport is genuinely too narrow for both (unavoidable on the
+     smallest phones for the longer endings). */
+  .hero-tagline {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: baseline;
+    column-gap: 0.4em;
+    row-gap: 0.2rem;
+  }
+  /* Static lead-in — same family as the rotating ending, but upright and
+     regular weight, so the two read as one sentence in one voice while
+     the swap between "written" and "spoken with emphasis" still comes
+     through in weight/style rather than a font change. */
+  .hero-tagline__intro {
+    font-family: 'DM Mono', 'JetBrains Mono', 'Cascadia Code', 'Consolas', monospace;
+    font-weight: 400;
+    font-style: normal;
+  }
+
+  /* ---- rotating tail end of the tagline ---------------------------------
+     All six endings sit stacked in the same CSS grid cell (grid-area 1/1),
+     which auto-sizes the box to the widest/tallest of them — so it holds
+     a stable width and height across swaps with no explicit measuring.
+     Each line stays single-line (white-space: nowrap) so the odometer
+     slide never re-wraps mid-transition. Line 1 ships .is-active from the
+     server, which is also what prefers-reduced-motion and no-JS visitors
+     see, permanently. */
+  .hero-rotator {
+    display: inline-grid;
+    /* start, not stretch: without this every line's box stretches to the
+       column's full (longest-line) width, and a shorter line then centers
+       inside that extra space — opening a visible gap after the static
+       lead-in text instead of butting straight up against it. */
+    justify-items: start;
+    max-width: 100%;
+    overflow: hidden;
+    vertical-align: baseline;
+  }
+  /* Odometer-style rotation: the active line sits at rest; the next line
+     rises up from below to replace it, while the outgoing line keeps
+     travelling up and out — same direction throughout, like a rolling
+     counter, rather than a plain crossfade. .is-leaving is added/removed
+     by the rotator script once each swap's transition finishes, so an
+     outgoing line is always reset below (its rest position) before its
+     next turn. */
+  .hero-rotator__line {
+    grid-area: 1 / 1;
+    white-space: nowrap;
+    text-align: left;
+    font-family: 'DM Mono', 'JetBrains Mono', 'Cascadia Code', 'Consolas', monospace;
+    font-weight: 700;
+    font-style: italic;
+    color: var(--heading);
+    opacity: 0;
+    transform: translateY(65%);
+    transition: transform 0.5s cubic-bezier(0.65, 0, 0.35, 1), opacity 0.35s ease;
+    pointer-events: none;
+  }
+  .hero-rotator__line.is-active {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .hero-rotator__line.is-leaving {
+    opacity: 0;
+    transform: translateY(-65%);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .hero-rotator__line {
+      transition: none;
+    }
   }
 
   /* Section headings ("Experience", "Skills", "Around the web"):

@@ -71,6 +71,65 @@ export interface Experience {
     { title: "Testing", items: ["Jest", "Cypress", "React Testing Library"] },
   ];
   
+  export interface CaseStudy {
+    company: string;
+    title: string;
+    stat: string;
+    statLabel: string;
+    problem: string;
+    decisions: string;
+    implementation: string;
+    result: string;
+  }
+
+  // Drawn directly from the achievement bullets in `experiences` above —
+  // same facts, reframed as a problem/decisions/implementation/result
+  // narrative instead of a bullet list.
+  export const caseStudies: CaseStudy[] = [
+    {
+      company: "Hinge Health",
+      title: "First Contentful Paint: 2s to 0.2s in a HIPAA-regulated app",
+      stat: "2s → 0.2s",
+      statLabel: "First Contentful Paint",
+      problem:
+        "Patient-facing pages on a Gatsby + GraphQL + Contentful stack were slow to first paint — inside a regulated US healthcare environment serving HIPAA-compliant, patient-facing content, where that delay is a compliance-sensitive UX problem, not just a metric.",
+      decisions:
+        "Traced the bottleneck to the GraphQL + Contentful data layer, then proposed migrating off Gatsby to Astro rather than optimizing the existing stack in place. Paired that with an edge-delivery overhaul and a real-user-monitoring layer to prove the gains and keep them.",
+      implementation:
+        "Led the Gatsby → Astro migration, stood up AWS CloudFront edge delivery, and built production dashboards tracking LCP, CLS, and FID from real-user monitoring data — all while owning WCAG 2.1 AA and GDPR/privacy requirements through the same Agile sprints, and leading a 5-person frontend team through it.",
+      result:
+        "First Contentful Paint dropped from roughly 2s to 0.2s on patient-facing pages, with RUM dashboards in place to keep the regression visible if it ever crept back.",
+    },
+    {
+      company: "Confluent",
+      title: "Docs platform build times: 10–20 minutes to 1.5 minutes",
+      stat: "20m → 1.5m",
+      statLabel: "Build time",
+      problem:
+        "A Sphinx-based documentation platform serving 100,000+ weekly visits had 10–20 minute build times, slowing CI/CD feedback for a team of 8 technical writers and every engineer waiting on a preview.",
+      decisions:
+        "Evaluated the toolchain and drove adoption of Astro to replace Sphinx, and paired it with a planned Python 3.8 → 3.12 migration across the build pipeline rather than patching the old stack incrementally.",
+      implementation:
+        "Owned the technical architecture end to end: the Astro migration, the Python version upgrade, dependency modernization and removal of deprecated packages, plus the CI/CD standards and component-library architecture that were then adopted across documentation and adjacent platform teams.",
+      result:
+        "Build times fell from 10–20 minutes to 1.5 minutes — a fast enough loop that CI/CD feedback stopped being the bottleneck for the docs org.",
+    },
+    {
+      company: "Phenom",
+      title: "Migrating 500 components across an Angular v9 → v15 upgrade",
+      stat: "500+",
+      statLabel: "Components migrated",
+      problem:
+        "A ~500-component Angular v9 codebase, serving a product with 5,000+ active users and ~30s load times, was blocking the team from standalone components and newer framework capabilities.",
+      decisions:
+        "Planned and led the Angular v9 → v15 upgrade to standalone components as a coordinated, team-wide effort rather than a piecemeal one, bringing a 12–15 engineer team through it together.",
+      implementation:
+        "Directed the phased migration across all ~500 components, introduced pre-commit hooks and documented anti-patterns to hold quality steady mid-migration, and mentored engineers through the work — several were subsequently promoted to senior.",
+      result:
+        "~500 components migrated to Angular v15 standalone architecture, frontend load time cut from ~30s to ~5s, and PR cycle time down from the tooling introduced alongside it.",
+    },
+  ];
+
   export const links = [
     { label: "GitHub", sub: "9thQuadrant", href: "https://github.com/9thQuadrant" },
     { label: "LinkedIn", sub: "phaneendracharyulu", href: "https://www.linkedin.com/in/phaneendracharyulu" },

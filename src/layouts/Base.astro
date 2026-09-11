@@ -35,6 +35,13 @@ const {
       rel="preload"
       as="font"
       type="font/woff2"
+      href="/fonts/dm-mono-regular-latin.woff2"
+      crossorigin
+    />
+    <link
+      rel="preload"
+      as="font"
+      type="font/woff2"
       href="/fonts/dm-mono-medium-italic-latin.woff2"
       crossorigin
     />
@@ -127,6 +134,9 @@ document.head.appendChild(o)}initApollo();</script>
       <div class="site-nav__center">
         <div class="site-nav__links">
           <a href="#top">Intro</a>
+          <a href="#help">Help</a>
+          <a href="#impact">Impact</a>
+          <a href="#case-studies">Case Studies</a>
           <a href="#experience">Experience</a>
           <a href="#skills">Skills</a>
           <a href="#writing">Writing</a>
@@ -283,9 +293,19 @@ document.head.appendChild(o)}initApollo();</script>
     src: url('/fonts/jetbrains-mono-latin.woff2') format('woff2');
   }
 
-  /* Italic-only — used exclusively for the hero's rotating quote line, so
-     no upright cut is loaded. Medium is DM Mono's heaviest cut; the
-     rotator asks for a bold weight and the browser maps it to this face. */
+  /* DM Mono, for the hero tagline: upright/regular for the static lead-in,
+     bold italic for the rotating ending. The family only ships 300/400/500
+     — there's no true bold — so the italic face below is 500 (Medium), the
+     heaviest real weight available; requesting font-weight: 700 on it (see
+     .hero-rotator__line) asks the browser to synthesize bold on top of
+     that, since no exact-weight face exists to match. */
+  @font-face {
+    font-family: 'DM Mono';
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url('/fonts/dm-mono-regular-latin.woff2') format('woff2');
+  }
   @font-face {
     font-family: 'DM Mono';
     font-style: italic;
@@ -425,7 +445,11 @@ document.head.appendChild(o)}initApollo();</script>
     z-index: 50;
     height: 60px;
     display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, auto) minmax(0, 1fr);
+    /* the brand/toggle columns need a real floor, not 0 — with 8 links now
+       in the centre column, an unbounded minmax(0, 1fr) let that auto
+       column claim all the space and squeezed both outer columns to
+       literally 0px, which is what let "PK" spill over "Intro" */
+    grid-template-columns: minmax(56px, 1fr) minmax(0, auto) minmax(56px, 1fr);
     align-items: center;
     gap: 1rem;
     padding: 0 1.25rem;
@@ -478,6 +502,15 @@ document.head.appendChild(o)}initApollo();</script>
     .site-nav__brand {
       animation: none;
       -webkit-text-stroke-color: var(--g2);
+    }
+  }
+  /* at 2.25rem "PK" was wide enough on narrow phones to overflow its grid
+     column and sit on top of "Intro" — the nav has more links now, so the
+     centre column has less room either side. Scale the brand down instead
+     of letting it collide. */
+  @media (max-width: 480px) {
+    .site-nav__brand {
+      font-size: 1.5rem;
     }
   }
 
@@ -622,12 +655,21 @@ document.head.appendChild(o)}initApollo();</script>
   .animate-fade-up-delay-3 { animation: fade-up 0.7s 0.35s ease-out both; }
   .animate-fade-up-delay-4 { animation: fade-up 0.7s 0.5s ease-out both; }
 
-  /* Cold-email visits: keep the hero hidden until index.astro has written
-     the personalized headline, so visitors never see the default copy
-     paint and get replaced. JS reveals it immediately (with a failsafe
-     timer). visibility keeps the layout box, so there's no layout shift. */
-  .is-cold-email #hero-eyebrow,
-  .is-cold-email #hero-headline {
-    visibility: hidden;
+  /* Cold-email visits: the giant name + role line are replaced entirely by
+     the personalized identity/context lines in index.astro (#hero-identity,
+     #hero-context) — hidden here, synchronously, before first paint, so
+     there's no flash of the default name/role first. #hero-identity is
+     static markup revealed by this same rule; #hero-context still needs
+     JS (it depends on ?co=) and stays hidden via its own `hidden`
+     attribute until that script fills it in. */
+  .is-cold-email #hero-headline,
+  .is-cold-email #hero-role {
+    display: none;
+  }
+  #hero-identity {
+    display: none;
+  }
+  .is-cold-email #hero-identity {
+    display: block;
   }
 </style>
