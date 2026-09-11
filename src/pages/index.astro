@@ -2,6 +2,19 @@
 import Base from '../layouts/Base.astro';
 import Stars from '../components/Stars.astro';
 import { experiences, skills, links } from '../data/content';
+
+// Rotating hero subheadline. Order is deliberate: React leads (the site is
+// positioned for React/TypeScript/Next.js roles), Angular depth shows up
+// third — real and detailed in Experience, just not the first thing a
+// visitor reads. Line 1 doubles as the static, server-rendered fallback
+// (no-JS and reduced-motion both land here) — see the .sr-only paragraph
+// and the rotator script further down.
+const rotatingLines = [
+  'React across the full lifecycle: greenfield PWAs, legacy modernization, and framework migrations.',
+  'Cut FCP from 2s to 0.2s. Cut build times from 20 minutes to 90 seconds.',
+  'Led a 500-component Angular migration with a 15-engineer team, end to end.',
+  'Shipped in regulated environments only: healthcare, HR tech, and enterprise SaaS.',
+];
 ---
 
 <Base>
@@ -47,7 +60,7 @@ import { experiences, skills, links } from '../data/content';
   </script>
 
   <!-- Hero -->
-  <section class="relative z-10 min-h-screen flex flex-col items-center justify-center px-6 pb-28 text-center">
+  <section id="top" class="relative z-10 min-h-screen flex flex-col items-center justify-center px-6 pt-20 pb-28 text-center">
     <p id="hero-eyebrow" class="hero-eyebrow animate-fade-up-delay-1">
       Senior Frontend Engineer
     </p>
@@ -205,7 +218,7 @@ import { experiences, skills, links } from '../data/content';
             headline.innerHTML = '';
             var h1 = document.createElement('h1');
             h1.className =
-              'text-4xl md:text-6xl font-black leading-tight tracking-tight mb-10 animate-fade-up-delay-2';
+              'text-4xl md:text-6xl font-black leading-tight tracking-tight mb-3 animate-fade-up-delay-2';
             h1.appendChild(document.createTextNode('Hi '));
             var span = document.createElement('span');
             span.className = 'shine-text';
@@ -218,7 +231,7 @@ import { experiences, skills, links } from '../data/content';
             // greets the visitor by name — reintroduce it as a small line,
             // with my name weighted so it doesn't disappear into the rest.
             var intro = document.createElement('p');
-            intro.className = 'text-sm text-[color:var(--text-muted)] mb-4 animate-fade-up-delay-3';
+            intro.className = 'text-base md:text-lg text-[color:var(--text-muted)] mb-4 animate-fade-up-delay-3';
             intro.innerHTML =
               "I'm <span class=\"font-semibold shine-text\">Phaneendra Kanduri</span>, frontend engineer at Confluent (an IBM company).";
             headline.insertAdjacentElement('afterend', intro);
@@ -233,62 +246,125 @@ import { experiences, skills, links } from '../data/content';
       })();
     </script>
 
-    <p class="text-lg md:text-xl text-[color:var(--text)] max-w-xl mx-auto mb-4 leading-relaxed animate-fade-up-delay-3">
-      9+ years turning slow, legacy frontends into fast, accessible products
-      for regulated industries and Fortune 500 teams.
-    </p>
+    <!-- Rotating value-prop line. aria-hidden because the four lines cycle —
+         re-announcing that to screen readers every 3.5s would be worse than
+         static text. Line 1's content is repeated once, non-rotating, in
+         the .sr-only paragraph right after. Line 1 also ships active in the
+         server-rendered HTML, so it's what shows with JS disabled or under
+         prefers-reduced-motion (the rotator script never starts a timer in
+         that case — see the script below). -->
+    <div id="hero-rotator" class="hero-rotator mb-7 animate-fade-up-delay-3" aria-hidden="true">
+      {rotatingLines.map((line, i) => (
+        <p class={`hero-rotator__line${i === 0 ? ' is-active' : ''}`}>
+          <span class="hero-rotator__quote">{line}</span>
+        </p>
+      ))}
+    </div>
+    <p class="sr-only">{rotatingLines[0]}</p>
 
-    <p class="mono text-xs md:text-sm text-[color:var(--text-secondary)] mb-3 animate-fade-up-delay-3">
-      2s → 0.2s FCP &nbsp;·&nbsp; 20min → 1.5min builds &nbsp;·&nbsp; 30s → 5s load
-    </p>
+    <div class="hero-metrics mb-8 animate-fade-up-delay-3" aria-label="Performance metrics">
+      <span class="hero-metric">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+        <span class="mono">2s → 0.2s FCP</span>
+      </span>
+      <span class="hero-metric-sep" aria-hidden="true">·</span>
+      <span class="hero-metric">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94z"/></svg>
+        <span class="mono">20min → 1.5min builds</span>
+      </span>
+      <span class="hero-metric-sep" aria-hidden="true">·</span>
+      <span class="hero-metric">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        <span class="mono">30s → 5s load</span>
+      </span>
+    </div>
 
-    <p class="text-sm text-[color:var(--text-muted)] mb-2.5 animate-fade-up-delay-3">
-      Enterprise SaaS &nbsp;·&nbsp; Healthcare &nbsp;·&nbsp; HR Tech
-    </p>
+    <!-- Industries + availability, as chips rather than dot-separated text —
+         each fact gets its own bounded shape and a small icon, so this
+         block reads as distinct pieces of information instead of one long
+         run-on line. -->
+    <div class="hero-chips mb-3 animate-fade-up-delay-3" aria-label="Industries">
+      <span class="hero-chip">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></svg>
+        Enterprise SaaS
+      </span>
+      <span class="hero-chip">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 1 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+        Healthcare
+      </span>
+      <span class="hero-chip">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        HR Tech
+      </span>
+    </div>
 
-    <p class="text-sm font-medium text-[color:var(--text-secondary)] mb-6 animate-fade-up-delay-3">
-      Open to relocate &nbsp;·&nbsp; Available in 30 days
-    </p>
+    <div class="hero-chips mb-9 animate-fade-up-delay-3" aria-label="Availability">
+      <span class="hero-chip">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+        Willing to relocate
+      </span>
+      <span class="hero-chip">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        Visa sponsorship required
+      </span>
+      <span class="hero-chip">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        Notice period: 30 days
+      </span>
+    </div>
 
-    <a
-      id="book-call-btn"
-      href="https://cal.com/phaneendra-kanduri/30min"
-      target="_blank"
-      rel="noopener noreferrer"
-      class="shiny-cta inline-block text-sm font-semibold lowercase tracking-wide px-7 py-3.5 mb-5 rounded-full border text-[color:var(--heading)] transition-colors"
-    >
-      let's talk!
-    </a>
+    <div class="flex flex-wrap items-center justify-center gap-3 mb-7">
+      <a
+        id="resume-btn"
+        href="/resume/Phaneendra_Kanduri_Resume.pdf"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="btn-outline inline-flex items-center gap-2 text-sm font-semibold tracking-wide px-7 py-3.5 rounded-full border transition-colors"
+      >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="flex-none"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        View Résumé
+      </a>
+      <a
+        id="book-call-btn"
+        href="https://cal.com/phaneendra-kanduri/30min"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="shiny-cta inline-flex items-center gap-2 text-sm font-semibold tracking-wide px-7 py-3.5 rounded-full border text-[color:var(--heading)] transition-colors"
+      >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="flex-none"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        Got 15 minutes? →
+      </a>
+    </div>
 
-    <div class="flex justify-center gap-4 animate-fade-up-delay-4">
+    <div class="social-row flex justify-center gap-3 animate-fade-up-delay-4">
       <a href="https://github.com/9thQuadrant" target="_blank" rel="noopener noreferrer" aria-label="GitHub"
         class="icon-link">
         <!-- GitHub icon -->
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/>
         </svg>
       </a>
       <a href="https://www.linkedin.com/in/phaneendracharyulu" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn"
         class="icon-link">
         <!-- LinkedIn icon -->
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/>
           <rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/>
-        </svg>
-      </a>
-      <a href="mailto:phaneendra@9thquadrant.com" aria-label="Email"
-        class="icon-link">
-        <!-- Mail icon -->
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
-          <polyline points="22,6 12,13 2,6"/>
         </svg>
       </a>
       <a href="https://dev.to/9thquadrant" target="_blank" rel="noopener noreferrer" aria-label="Dev.to blog"
         class="icon-link">
         <!-- Code brackets — stroke weight matched to the other three icons -->
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/>
+        </svg>
+      </a>
+      <a href="mailto:phaneendra@9thquadrant.com" aria-label="Email"
+        class="icon-link">
+        <!-- Mail icon -->
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+          <polyline points="22,6 12,13 2,6"/>
         </svg>
       </a>
     </div>
@@ -302,6 +378,27 @@ import { experiences, skills, links } from '../data/content';
       </span>
     </a>
   </section>
+  <script is:inline>
+    // GA4 doesn't reliably auto-track outbound file downloads unless
+    // "File downloads" is switched on under Enhanced measurement in the
+    // GA4 property admin — and even then it's a heuristic, not guaranteed.
+    // Firing the event explicitly on click means it's tracked either way.
+    // Uses GA4's own recommended file_download schema so it lines up with
+    // whatever Enhanced measurement would have sent.
+    (function () {
+      var btn = document.getElementById('resume-btn');
+      if (!btn) return;
+      btn.addEventListener('click', function () {
+        if (typeof gtag !== 'function') return;
+        gtag('event', 'file_download', {
+          file_name: 'Phaneendra_Kanduri_Resume.pdf',
+          file_extension: 'pdf',
+          link_url: btn.href,
+          link_text: btn.textContent.trim(),
+        });
+      });
+    })();
+  </script>
   <script is:inline>
     // fade the scroll cue out once the visitor has clearly started scrolling
     (function () {
@@ -319,6 +416,65 @@ import { experiences, skills, links } from '../data/content';
         },
         { passive: true }
       );
+    })();
+  </script>
+  <script is:inline>
+    // Hero rotator: cycles the four value-prop lines every 3.5s.
+    // Respects prefers-reduced-motion by never starting a timer at all —
+    // line 1 (already active in the server-rendered HTML) just stays put.
+    // Pauses on hover/focus of the hero (#top) and resumes on leave/blur.
+    (function () {
+      var root = document.getElementById('hero-rotator');
+      if (!root) return;
+      var lines = root.querySelectorAll('.hero-rotator__line');
+      if (lines.length < 2) return;
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+      var idx = 0;
+      var timer = null;
+
+      function show(next) {
+        // Odometer-style swap: the outgoing line keeps travelling upward
+        // (is-leaving) while the incoming one rises from below into the
+        // active slot — both moving the same direction, like a rolling
+        // counter. Once the outgoing line's transition is done it's reset
+        // to its resting position (below, no transition) so it's ready to
+        // rise in again on its next turn.
+        var outgoing = lines[idx];
+        outgoing.classList.remove('is-active');
+        outgoing.classList.add('is-leaving');
+        window.setTimeout(function () {
+          outgoing.classList.remove('is-leaving');
+          outgoing.style.transition = 'none';
+          void outgoing.offsetWidth; // force reflow before re-enabling the transition
+          outgoing.style.transition = '';
+        }, 520);
+
+        idx = next;
+        lines[idx].classList.add('is-active');
+      }
+      function tick() {
+        show((idx + 1) % lines.length);
+      }
+      function start() {
+        if (!timer) timer = setInterval(tick, 3500);
+      }
+      function stop() {
+        if (timer) {
+          clearInterval(timer);
+          timer = null;
+        }
+      }
+
+      start();
+
+      var hero = document.getElementById('top');
+      if (hero) {
+        hero.addEventListener('mouseenter', stop);
+        hero.addEventListener('mouseleave', start);
+        hero.addEventListener('focusin', stop);
+        hero.addEventListener('focusout', start);
+      }
     })();
   </script>
 
@@ -354,7 +510,7 @@ import { experiences, skills, links } from '../data/content';
   </section>
 
   <!-- Skills -->
-  <section class="relative z-10 py-24 px-6">
+  <section id="skills" class="relative z-10 py-24 px-6">
     <div class="max-w-2xl mx-auto">
       <p class="section-label">Skills</p>
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -373,7 +529,7 @@ import { experiences, skills, links } from '../data/content';
   </section>
 
   <!-- Links -->
-  <section class="relative z-10 py-24 px-6">
+  <section id="writing" class="relative z-10 py-24 px-6">
     <div class="max-w-2xl mx-auto">
       <p class="section-label">Around the web</p>
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -398,7 +554,7 @@ import { experiences, skills, links } from '../data/content';
   </section>
 
   <!-- Footer -->
-  <footer class="grad-top relative z-10 py-10 px-6 text-center">
+  <footer id="contact" class="grad-top relative z-10 py-10 px-6 text-center">
     <a href="mailto:phaneendra@9thquadrant.com"
       class="text-sm text-[color:var(--text-muted)] hover:text-[color:var(--link)] transition-colors">
       phaneendra@9thquadrant.com
@@ -462,7 +618,7 @@ import { experiences, skills, links } from '../data/content';
     /* absolute (not fixed) so the aurora belongs to the hero and scrolls
        away with it, rather than tinting every section as you move down */
     position: absolute;
-    top: -160px;
+    top: -128px; /* was -160px — brought down 20% */
     left: 0;
     right: 0;
     height: min(66vh, 600px);
@@ -494,7 +650,7 @@ import { experiences, skills, links } from '../data/content';
     height: 170%;
     border-radius: 45% 55% 62% 38%;
     /* less blur than the travel distance, otherwise the drift is invisible */
-    filter: blur(46px) saturate(1.3);
+    filter: blur(46px) saturate(var(--aurora-saturate));
     mix-blend-mode: var(--aurora-blend);
     opacity: var(--aurora-opacity);
     will-change: transform;
@@ -544,6 +700,193 @@ import { experiences, skills, links } from '../data/content';
   }
   @media (prefers-reduced-motion: reduce) {
     .aurora-band { animation: none; }
+  }
+
+  /* ---- hero rotator --------------------------------------------------
+     Fixed-height stage so the four lines crossfade in place with zero
+     layout shift. Every line is absolutely positioned inside the stage
+     (so only min-height, not content, drives the box's size); the
+     .is-active one gets opacity:1. Line 1 ships .is-active from the
+     server, which is also what prefers-reduced-motion and no-JS visitors
+     see, permanently. */
+  .hero-rotator {
+    position: relative;
+    /* explicit width: every line inside is absolutely positioned (so they
+       can crossfade in place), which means the rotator has no in-flow
+       content to size itself from — without this it collapses to zero
+       width in the hero's centered flex column. */
+    width: 100%;
+    max-width: 42rem;
+    margin: 0 auto;
+    /* dedicated, fixed stage height (not responsive) — every line, at any
+       viewport width, crossfades/slides within this box with zero shift */
+    min-height: 150px;
+    /* clips the odometer slide — lines travel past the box edge on their
+       way in/out rather than spilling into neighbouring content */
+    overflow: hidden;
+  }
+  /* Odometer-style rotation: the active line sits at rest; the next line
+     rises up from below to replace it, while the outgoing line keeps
+     travelling up and out — same direction throughout, like a rolling
+     counter, rather than a plain crossfade. .is-leaving is added/removed
+     by the rotator script (see the inline script after this section) once
+     each swap's transition finishes, so an outgoing line is always reset
+     below (its default rest position) before its next turn. */
+  .hero-rotator__line {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    font-family: 'DM Mono', 'JetBrains Mono', 'Cascadia Code', monospace;
+    font-style: italic;
+    font-weight: 700;
+    font-size: 1.125rem;
+    line-height: 1.625;
+    color: var(--text);
+    opacity: 0;
+    transform: translateY(65%);
+    transition: transform 0.5s cubic-bezier(0.65, 0, 0.35, 1), opacity 0.35s ease;
+    pointer-events: none;
+  }
+  @media (min-width: 768px) {
+    .hero-rotator__line {
+      font-size: 1.25rem;
+    }
+  }
+  /* Real curly quote marks flanking the line, sized up and lightly
+     tinted so they read as a proper pull-quote rather than plain punctuation.
+     Part of the inline text (not separate flex items), so they wrap and
+     stay glued to the sentence exactly like typography would. */
+  .hero-rotator__quote::before,
+  .hero-rotator__quote::after {
+    font-family: Georgia, 'Times New Roman', serif;
+    font-style: normal;
+    font-weight: 700;
+    font-size: 1.3em;
+    color: var(--link);
+    opacity: 0.65;
+    vertical-align: -0.08em;
+  }
+  .hero-rotator__quote::before {
+    content: '\201C';
+    margin-right: 0.15em;
+  }
+  .hero-rotator__quote::after {
+    content: '\201D';
+    margin-left: 0.15em;
+  }
+  .hero-rotator__line.is-active {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .hero-rotator__line.is-leaving {
+    opacity: 0;
+    transform: translateY(-65%);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .hero-rotator__line {
+      transition: none;
+    }
+  }
+
+  /* ---- hero metrics ----------------------------------------------------
+     Each stat gets its own small icon (lightning/wrench/clock) so the row
+     reads as three distinct proof points instead of one dense mono string. */
+  .hero-metrics {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 0.65rem;
+    font-weight: 400;
+    color: var(--heading);
+  }
+  .hero-metric {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 1rem;
+  }
+  @media (min-width: 768px) {
+    .hero-metric {
+      font-size: 1.125rem;
+    }
+  }
+  .hero-metric svg {
+    flex: none;
+    width: 16px;
+    height: 16px;
+    color: var(--link);
+  }
+  .hero-metric-sep {
+    color: var(--text-faint);
+    font-weight: 400;
+  }
+
+  /* ---- hero chips ------------------------------------------------------
+     Industries + availability as individual pill shapes with a small icon
+     each, instead of one long dot-separated line — breaks the hero's lower
+     half into distinct, scannable pieces instead of a wall of text. */
+  .hero-chips {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 0.55rem;
+  }
+  .hero-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.4rem 0.85rem;
+    border-radius: 9999px;
+    border: 1px solid var(--border-solid);
+    background: var(--surface);
+    font-size: 0.78rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    white-space: nowrap;
+  }
+  .hero-chip svg {
+    flex: none;
+    width: 14px;
+    height: 14px;
+    color: var(--link);
+  }
+
+  /* ---- secondary CTA (outline) — sits next to .shiny-cta, deliberately
+     quieter: no gradient border, no glow, just a border that picks up the
+     link colour on hover. */
+  .btn-outline {
+    border-color: var(--border-solid);
+    color: var(--text-secondary);
+    background: transparent;
+    /* matches .shiny-cta's own entrance timing so both buttons in the
+       CTA row fade up together */
+    animation: fade-up 0.7s 0.5s ease-out both;
+  }
+  .btn-outline:hover {
+    border-color: var(--link);
+    color: var(--heading);
+    background: var(--surface);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .btn-outline { animation: fade-up 0.7s 0.5s ease-out both; }
+  }
+
+  /* ---- social row — smaller than the header icon row (still secondary
+     to the CTAs above), but with a real fill and solid contrast so they
+     don't read as barely-there ghosts. */
+  .social-row .icon-link {
+    width: 36px;
+    height: 36px;
+    background: var(--surface);
+    color: var(--text-secondary);
+  }
+  .social-row .icon-link:hover {
+    background: var(--surface-hover);
   }
 
   /* ---- section eyebrows --------------------------------------------- */
