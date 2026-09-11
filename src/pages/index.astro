@@ -1212,6 +1212,29 @@ const helpItems = [
     opacity: 0;
     transform: translateY(-65%);
   }
+  /* Below 768px there isn't room for the longest endings to sit on one
+     line next to the intro text (DM Mono runs wide) — .hero-tagline's own
+     flex-wrap already lets the rotator drop to its own row when needed,
+     but nowrap text would still force that row wider than the viewport.
+     display:grid + width:100% gives the column a real, viewport-relative
+     width to wrap text against instead of sizing to unwrapped content —
+     but grid items default to min-width:auto, which floors their size at
+     their content's min-content (for nowrap text, that's the full
+     unwrapped width) and blows the container out regardless of the width
+     set above. min-width: 0 removes that floor so wrapping actually
+     takes effect. Placed after the rule above on purpose — same
+     specificity as the plain .hero-rotator__line rule, so it has to come
+     later in the cascade to win. */
+  @media (max-width: 767px) {
+    .hero-rotator {
+      display: grid;
+      width: 100%;
+    }
+    .hero-rotator__line {
+      white-space: normal;
+      min-width: 0;
+    }
+  }
   @media (prefers-reduced-motion: reduce) {
     .hero-rotator__line {
       transition: none;
